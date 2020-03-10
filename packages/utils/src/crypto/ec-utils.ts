@@ -8,9 +8,28 @@ export default {
   encrypt,
   getAddressFromPrivateKey,
   getAddressFromPublicKey,
+  getPublicKeyFromPrivateKey,
   recover,
   sign,
 };
+
+/**
+ * Function to derive the public key from an EC private key
+ *
+ * @param privateKey the private key to derive
+ *
+ * @returns the public key
+ */
+function getPublicKeyFromPrivateKey(privateKey: string): string {
+  try {
+    return EthCrypto.publicKeyByPrivateKey(privateKey);
+  } catch (e) {
+    if (e.message === 'private key length is invalid') {
+      throw new Error('The private key must be a string representing 32 bytes');
+    }
+    throw e;
+  }
+}
 
 /**
  * Function to derive the address from an EC private key
