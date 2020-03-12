@@ -9,4 +9,5 @@ export interface IIdentity {
 /** Supported identity types */
 export enum TYPE {
   ETHEREUM_ADDRESS = 'ethereumAddress',
+  GNOSIS_MULTISIG = 'gnosisMultisig',
 }
