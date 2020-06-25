@@ -1,10 +1,10 @@
 pragma solidity 0.5.11;
 
 /**
- * @title Sablier's Money Streaming
- * @author Sablier
+ * @title ERC1620Mock
+ * @author Request
  */
-contract Sablier {
+contract ERC1620Mock {
     /*** Storage Properties ***/
 
     /**

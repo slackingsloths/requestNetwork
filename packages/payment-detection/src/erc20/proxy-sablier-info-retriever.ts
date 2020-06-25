@@ -4,12 +4,11 @@ import { ethers } from 'ethers';
 const bigNumber: any = require('bn.js');
 
 // The ERC20 proxy smart contract ABI fragment containing TransferWithReference event
-const erc20SablierProxyContractAbiFragment = [
-  'event StreamWithReference(address tokenAddress, address to, uint256 amount, address streamAddress, uint256 streamId, bytes indexed paymentReference)',
+const erc1620ProxyContractAbiFragment = [
+  'event StreamWithReference(address tokenAddress, address to, uint256 amount, address streamContractAddress, uint256 streamId, bytes indexed paymentReference)',
 ];
 
-// The Sablier proxy smart contract ABI fragment containing TransferWithReference event
-// TODO: Turn into ERC1620
+// The ERC1620 proxy smart contract ABI fragment containing TransferWithReference event
 const streamContractAbiFragment = [
   'event CreateStream(uint256 indexed streamId, address indexed sender, address indexed recipient, uint256 deposit, address tokenAddress, uint256 startTime, uint256 stopTime)',
 ];
@@ -17,7 +16,7 @@ const streamContractAbiFragment = [
 /**
  * Retrieves a list of payment events from a payment reference, a destination address, a token address and a proxy contract
  */
-export default class ProxyERC20SablierInfoRetriever
+export default class ProxyERC1620InfoRetriever
   implements PaymentTypes.IPaymentNetworkInfoRetriever<PaymentTypes.ERC20PaymentNetworkEvent> {
   public contractProxy: ethers.Contract;
   public provider: ethers.providers.Provider;
@@ -48,7 +47,7 @@ export default class ProxyERC20SablierInfoRetriever
     // Setup the ERC20 proxy contract interface
     this.contractProxy = new ethers.Contract(
       this.proxyContractAddress,
-      erc20SablierProxyContractAbiFragment,
+      erc1620ProxyContractAbiFragment,
       this.provider,
     );
   }
@@ -73,7 +72,7 @@ export default class ProxyERC20SablierInfoRetriever
     const logs = await this.provider.getLogs(filter);
 
     let paymentStreamInitEvents: Promise<PaymentTypes.IERC20PaymentEventParameters[]> = [];
-    
+
     // Parses, filters and creates the events from the logs of the proxy contract
     const eventPromises = logs
       // Parses the logs
@@ -91,7 +90,7 @@ export default class ProxyERC20SablierInfoRetriever
       // Fetches the stream
       .map(async log => {
         const streamContract = new ethers.Contract(
-          log.parsedLog.values.streamAddress,
+          log.parsedLog.values.streamContractAddress,
           streamContractAbiFragment,
           this.provider,
         );

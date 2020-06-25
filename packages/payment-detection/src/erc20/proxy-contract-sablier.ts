@@ -7,6 +7,7 @@ import {
 import Utils from '@requestnetwork/utils';
 import getBalanceErrorObject from '../balance-error';
 import PaymentReferenceCalculator from '../payment-reference-calculator';
+// TODO rename file with ERC-1620
 import ProxyInfoRetriever from './proxy-sablier-info-retriever';
 
 const bigNumber: any = require('bn.js');
@@ -42,9 +43,9 @@ const PROXY_CONTRACT_ADDRESS_BY_VERSION_BY_NETWORK: IProxyContractByVersionByNet
 };
 
 /**
- * Handle payment networks with ERC20 proxy contract extension
+ * Handle payment networks with ERC1620 proxy contract extension
  */
-export default class PaymentNetworkERC20ProxyContract implements PaymentTypes.IPaymentNetwork {
+export default class PaymentNetworkERC1620ProxyContract implements PaymentTypes.IPaymentNetwork {
   private extension: ExtensionTypes.PnReferenceBased.IReferenceBased;
   /**
    * @param extension The advanced logic payment network extensions
