@@ -11,6 +11,7 @@ import addressBasedTestnetBtc from './extensions/payment-network/bitcoin/testnet
 import declarative from './extensions/payment-network/declarative';
 import addressBasedErc20 from './extensions/payment-network/erc20/address-based';
 import proxyContractErc20 from './extensions/payment-network/erc20/proxy-contract';
+import proxyContractErc20Sablier from './extensions/payment-network/erc20/sablier-proxy-contract';
 import ethereumInputData from './extensions/payment-network/ethereum/input-data';
 
 /**
@@ -96,6 +97,15 @@ export default class AdvancedLogic implements AdvancedLogicTypes.IAdvancedLogic 
     }
     if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT) {
       return proxyContractErc20.applyActionToExtension(
+        extensionsState,
+        extensionAction,
+        requestState,
+        actionSigner,
+        timestamp,
+      );
+    }
+    if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_SABLIER_PROXY_CONTRACT) {
+      return proxyContractErc20Sablier.applyActionToExtension(
         extensionsState,
         extensionAction,
         requestState,

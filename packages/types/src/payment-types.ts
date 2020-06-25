@@ -79,6 +79,8 @@ export interface IPaymentNetworkEvent<TEventParameters> {
 export enum EVENTS_NAMES {
   PAYMENT = 'payment',
   REFUND = 'refund',
+  PAYMENT_STREAM_INIT = 'payment-stream-init',
+  PAYMENT_STREAM_INTERRUPT = 'payment-stream-interrupt',
 }
 
 /** List of payment networks available (abstract the extensions type) */
@@ -87,6 +89,7 @@ export enum PAYMENT_NETWORK_ID {
   TESTNET_BITCOIN_ADDRESS_BASED = Extension.ID.PAYMENT_NETWORK_TESTNET_BITCOIN_ADDRESS_BASED,
   ERC20_ADDRESS_BASED = Extension.ID.PAYMENT_NETWORK_ERC20_ADDRESS_BASED,
   ERC20_PROXY_CONTRACT = Extension.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT,
+  ERC20_SABLIER_PROXY_CONTRACT = Extension.ID.PAYMENT_NETWORK_ERC20_SABLIER_PROXY_CONTRACT,
   ETH_INPUT_DATA = Extension.ID.PAYMENT_NETWORK_ETH_INPUT_DATA,
   DECLARATIVE = Extension.ID.PAYMENT_NETWORK_ANY_DECLARATIVE,
 }
