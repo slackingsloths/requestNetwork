@@ -1,10 +1,12 @@
 pragma solidity 0.5.11;
 
+import "github.com/sablierhq/sablier/blob/develop/packages/protocol/contracts/interfaces/IERC1620.sol";
+
 /**
  * @title ERC1620Mock
  * @author Request
  */
-contract ERC1620Mock {
+contract ERC1620Mock is IERC1620 {
     /*** Storage Properties ***/
 
     /**

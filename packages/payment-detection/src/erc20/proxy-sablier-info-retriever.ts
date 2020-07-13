@@ -71,10 +71,8 @@ export default class ProxyERC1620InfoRetriever
     // Get the event logs
     const logs = await this.provider.getLogs(filter);
 
-    let paymentStreamInitEvents: Promise<PaymentTypes.IERC20PaymentEventParameters[]> = [];
-
     // Parses, filters and creates the events from the logs of the proxy contract
-    const eventPromises = logs
+    const eventPromises: Promise<Array<{payment: PaymentTypes.IERC20PaymentEventParameters | undefined, paymentInit: PaymentTypes.IERC20PaymentEventParameters}>> = logs
       // Parses the logs
       .map(log => {
         const parsedLog = this.contractProxy.interface.parseLog(log);
@@ -120,15 +118,8 @@ export default class ProxyERC1620InfoRetriever
           .mul(paymentDuration)
           .div(totalDuration);
         
-        if(parsedStreamLog.values.startTime < now) {
-          return [{
-            amount,
-            name: PaymentTypes.EVENTS_NAMES.PAYMENT,
-            parameters: {
-              // TODO
-            },
-            timestamp: Math.min(parsedStreamLog.values.stopTime, now),
-          }, {
+        return { 
+          paymentInit: {
             amount: parsedStreamLog.values.deposit,
             name: PaymentTypes.EVENTS_NAMES.PAYMENT_STREAM_INIT,
             parameters: {
@@ -137,11 +128,19 @@ export default class ProxyERC1620InfoRetriever
               txHash: streamLogs[0].transactionHash,
             },
             timestamp: (await this.provider.getBlock(streamLogs[0].blockNumber || 0)).timestamp,
-          }
-        }]
-
+          },  
+          payment: parsedStreamLog.values.startTime > now ? {
+            amount,
+            name: PaymentTypes.EVENTS_NAMES.PAYMENT,
+            parameters: {
+              // TODO
+            },
+            timestamp: Math.min(parsedStreamLog.values.stopTime, now),
+          } : undefined
+        }
       });
 
-    return Promise.all(Utils.flatten2DimensionsArray(eventPromises));
+    // TODO 
+    // return Promise.all(eventPromises);
   }
 }
