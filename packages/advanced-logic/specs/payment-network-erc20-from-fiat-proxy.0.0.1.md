@@ -1,20 +1,11 @@
 # Dynamic Payment Network - ERC20 - proxy contract
 
-You may be interested in this document if:
-
-- you want to create your own implementation of the Request protocol
-- you are curious enough to dive and see what is under the hood of the Request protocol
-
-Prerequisite: Having read the advanced logic specification (see [here](./advanced-logic-specs-0.1.0.md)).
-
 ## Description
 
-Similarly to `pn-erc20-address-based` payment networks, his extension allows the payments and the refunds to be made in 
-ERC20 tokens on the Ethereum blockchain. The expected amount is fixed in the request currency. The Dynamic Payment Network
-computes the ERC20 amount at the payment.
-The payment is made through a proxy contract. This proxy contract does the ERC20 token transfer on behalf of
-the user. The contract ensures a link between an ERC20 transfer and a request through a `paymentReference`.
-This `paymentReference` is computed the same way as for `pn-erc20-address-based`.
+Similarly to `pn-erc20-address-based` payment networks, this extension allows the payments and the refunds to be made in 
+ERC20 tokens on the Ethereum blockchain. The ERC20 amount is computed at the payment stage, based on the expected amount,
+fixed in the request currency.
+The payment is made through the same proxy contract as `pn-erc20-address-based`, with the same parameters.
 
 As a payment network, this extension allows to compute a payment `balance` for the request. (see
 [Interpretation](#Interpretation))
@@ -192,6 +183,8 @@ The 'addRefundAddress' event:
 ---
 
 ## Interpretation
+
+The current version relies on https://www.cryptocompare.com/ as a price oracle to compute the request's payment status.
 
 The proxy contract address is determined by the `request.currency.network` (see (table)[#Contract] with proxy contract addresses).
 
