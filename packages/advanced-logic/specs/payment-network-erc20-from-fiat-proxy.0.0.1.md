@@ -5,7 +5,10 @@
 Similarly to `pn-erc20-address-based` payment networks, this extension allows the payments and the refunds to be made in 
 ERC20 tokens on the Ethereum blockchain. The ERC20 amount is computed at the payment stage, based on the expected amount,
 fixed in the request currency.
-The payment is made through the same proxy contract as `pn-erc20-address-based`, with the same parameters.
+Upon request creation, a list of acceptable ERC20 tokens is defined.
+Upon request payment, the conversion rate between the request amount and one of the ERC20 tokens fixes the amount to be
+paid. 
+If the payment is made in several transfers, they should all be made with the same currency.
 
 As a payment network, this extension allows to compute a payment `balance` for the request. (see
 [Interpretation](#Interpretation))
@@ -18,8 +21,6 @@ The dynamic payment network uses the same contract as its non-dynamic counter-pa
 
 ## Properties
 
-<!-- TODO WIP from here -->
-
 | Property                  | Type   | Description                                    | Requirement   |
 | ------------------------- | ------ | ---------------------------------------------- | ------------- |
 | **id**                    | String | constant value: "dpn-erc20-proxy-contract"     | **Mandatory** |
@@ -30,9 +31,31 @@ The dynamic payment network uses the same contract as its non-dynamic counter-pa
 | **values.salt**           | String | Salt for the request                           | **Mandatory**      |
 | **values.paymentAddress** | String | Ethereum address for the payment               | Optional      |
 | **values.refundAddress**  | String | Ethereum address for the refund                | Optional      |
+| **values.oracle**           | String | TODO: ID OR URL?                   | **Mandatory** |
+| **values.tokenAddresses** | Array | List of valid payment token addresses                  | **Mandatory**      |
 
+---
 
-Note: to use the Rinkeby testnet, create a request with `currency.network` as `rinkeby`.
+## Interpretation
+
+The current version relies on https://www.cryptocompare.com/ as a price oracle to compute the request's payment status.
+
+[Cf. `pn-erc20-proxy-contract`#Contract](./payment-network-erc20-proxy-contract-0.1.0.md#Interpretation) for the details of how
+payments can be
+
+The proxy contract address is determined by the `request.currency.network` (see (table)[#Contract] with proxy contract addresses).
+
+Any `TransferWithReference` events emitted from the proxy contract with the following arguments are considered as a payment:
+- `tokenAddress` `===` `request.currency.value`
+- `to` `===` `paymentAddress`
+- `paymentReference` `===` `last8Bytes(hash(lowercase(requestId + salt + payment address)))`
+
+Any `TransferWithReference` events emitted from the proxy contract with the following arguments are considered as a refund:
+- `tokenAddress` `===` `request.currency.value`
+- `to` `===` `refundAddress`
+- `paymentReference` `===` `last8Bytes(hash(lowercase(requestId + salt + refund address)))`
+
+The sum of payment amounts minus the sum of refund amounts is considered the balance.
 
 ---
 
@@ -49,6 +72,7 @@ Note: to use the Rinkeby testnet, create a request with `currency.network` as `r
 | **version**                   | String | Constant value: "0.1.0"                   | **Mandatory** |
 | **parameters**                | Object |                                           |               |
 | **parameters.salt**           | String | Salt for the request                      | **Mandatory** |
+| **parameters.oracle**           | String | TODO: ID OR URL?                   | **Mandatory** |
 | **parameters.paymentAddress** | String | Ethereum address for the payment          | Optional      |
 | **parameters.refundAddress**  | String | Ethereum address for the refund           | Optional      |
 
@@ -59,17 +83,11 @@ This action is valid if:
 
 - The `salt` is not empty and long enough (8 bytes of randomness minimum).
 - The `currency.type` is ERC20.
+- The oracle is implemented, for the version 0.1.0, this means it has to equal "TODO ID or URL?"
 
 #### Warnings
 
-This action must trigger the warnings:
-
-| Warning                                 | Condition                                                   |
-| --------------------------------------- | ----------------------------------------------------------- |
-| "paymentAddress is given by the payer"  | If `signer` is the payer **and** `paymentAddress` is given  |
-| "refundAddress is given by the payee"   | If `signer` is the payee **and** `refundAddress` is given   |
-
-Note: These warnings are necessary to highlight to avoid attempts of fake payments and refunds. For example, a payer could create a request using as the payment address one of his own addresses. A system could interpret a transaction to this address as a payment while the payee did not receive the funds.
+[cf. `pn-erc20-proxy-contract`#Warnings](./payment-network-erc20-proxy-contract-0.1.0.md#Warnings)
 
 #### Results
 
@@ -77,12 +95,13 @@ An extension state is created with the following properties:
 
 |  Property                 |  Value                                                         |
 | ------------------------- | -------------------------------------------------------------- |
-| **id**                    | "pn-erc20-proxy-contract"                                      |
+| **id**                    | "dpn-erc20-proxy-contract"                                      |
 | **type**                  | "paymentNetwork"                                               |
 | **version**               | "0.1.0"                                                        |
 | **values**                |                                                                |
 | **values.paymentAddress** | `paymentAddress` from parameters if given, undefined otherwise |
 | **values.refundAddress**  | `refundAddress` from parameters if given, undefined otherwise  |
+| **values.oracle**           | String | TODO: ID OR URL?                   |
 | **values.salt**           | Salt for the request                                           |
 | **events**                | Array with one 'create' event (see below)                      |
 
@@ -180,22 +199,3 @@ The 'addRefundAddress' event:
 | **parameters**               |                                 |
 | **parameters.refundAddress** | `refundAddress` from parameters |
 
----
-
-## Interpretation
-
-The current version relies on https://www.cryptocompare.com/ as a price oracle to compute the request's payment status.
-
-The proxy contract address is determined by the `request.currency.network` (see (table)[#Contract] with proxy contract addresses).
-
-Any `TransferWithReference` events emitted from the proxy contract with the following arguments are considered as a payment:
-- `tokenAddress` `===` `request.currency.value`
-- `to` `===` `paymentAddress`
-- `paymentReference` `===` `last8Bytes(hash(lowercase(requestId + salt + payment address)))`
-
-Any `TransferWithReference` events emitted from the proxy contract with the following arguments are considered as a refund:
-- `tokenAddress` `===` `request.currency.value`
-- `to` `===` `refundAddress`
-- `paymentReference` `===` `last8Bytes(hash(lowercase(requestId + salt + refund address)))`
-
-The sum of payment amounts minus the sum of refund amounts is considered the balance.
