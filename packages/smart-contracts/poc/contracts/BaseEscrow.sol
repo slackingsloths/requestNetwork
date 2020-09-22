@@ -8,8 +8,8 @@ contract BaseEscrow {
     }
 
     //enum UnlockMethod {MilestoneBased, TimeBased};
-    event EscrowUnlocked(bytes paymentReference, uint256 amount, address payee);
-    event EscrowLocked(bytes paymentReference, uint256 amount, address payee);
+    event EscrowUnlocked(bytes indexed paymentReference, uint256 amount, address payee);
+    event EscrowLocked(bytes indexed paymentReference, uint256 amount, address payee);
 
     mapping(address => mappedValue) public _escrowForPaymentRef;
 
