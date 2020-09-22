@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.7.1;
 
 import "./BaseEscrow.sol";
 
 // TODO Should probably inherit from ConditionBasedEscrow from OpenZepelin
-contract ConditionBasedEscrow {
+contract ConditionedEscrow {
 
     BaseEscrow private baseEscrowToInform;
     bytes private paymentRef;
