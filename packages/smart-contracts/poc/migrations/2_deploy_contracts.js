@@ -6,7 +6,7 @@ module.exports = async function(deployer) {
   try {
     await deployer.deploy(BaseEscrow);
     console.log('BaseEscrow Contract deployed: ' + BaseEscrow.address);
-    await deployer.deploy(ConditionedEscrow, "0x1234", BaseEscrow.address);
+    await deployer.deploy(ConditionedEscrow, "0x52cf1991c5e92659", BaseEscrow.address);
     console.log('BaseEscrow Contract deployed: ' + ConditionedEscrow.address);
 
     // ----------------------------------
