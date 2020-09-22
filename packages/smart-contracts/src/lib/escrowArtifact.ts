@@ -8,7 +8,7 @@ const ARTIFACTS_VERSION: string = artifactsEscrow.lastVersion;
 export function getContractAbi(): any {
   const artifactFilename: string = artifactsEscrow[ARTIFACTS_VERSION].artifact;
 
-  const artifact = require(`../../artifacts/ERC20FeeProxy/${artifactFilename.replace(
+  const artifact = require(`../../artifacts/escrow/BaseEscrow/${artifactFilename.replace(
     /\.[^/.]+$/,
     '',
   )}.json`);
