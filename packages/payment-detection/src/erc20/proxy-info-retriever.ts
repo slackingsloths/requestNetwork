@@ -87,8 +87,8 @@ export default class ProxyERC20InfoRetriever
       .filter(
         log => {
           log.parsedLog.values.paymentToken.toLowerCase() ===
-             this.tokenContractAddress.toLowerCase() &&
-          log.parsedLog.values.payee.toLowerCase() === this.toAddress.toLowerCase(),
+            this.tokenContractAddress.toLowerCase() &&
+            log.parsedLog.values.payee.toLowerCase() === this.toAddress.toLowerCase()
         }
       )
       // Creates the balance events

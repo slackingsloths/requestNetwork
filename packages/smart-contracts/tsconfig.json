@@ -17,7 +17,7 @@
     "./artifacts/EthereumProxy/0.1.0.json",
     "./artifacts/ERC20FeeProxy/artifacts.json",
     "./artifacts/ERC20FeeProxy/0.1.0.json",
-    "./artifacts/escrow/BaseEscrow/artifacts.json",
-    "./artifacts/escrow/BaseEscrow/0.1.0.json"
+    "./artifacts/InvoiceBasedEscrow/artifacts.json",
+    "./artifacts/InvoiceBasedEscrow/0.1.0.json"
   ]
 }
