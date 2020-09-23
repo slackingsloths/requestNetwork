@@ -711,7 +711,6 @@ export default class Request {
    * @returns return the balance
    */
   public async refreshBalance(): Promise<Types.Payment.IBalanceWithEvents<any> | null> {
-    // TODO balance = withdrawn now
     // TODO: PROT-1131 - add a pending balance
     this.balance =
       this.paymentNetwork && this.requestData
@@ -739,21 +738,17 @@ export default class Request {
 export class RequestWithEscrow extends Request {
 
   /**
-   * Balance and payments/refund events
+   * Balance of payments committed to escrow and escrow lock events
    */
   public committedBalance: PaymentTypes.IBalanceWithEvents | null = null;
-  /**
-   * Balance and payments/refund events
-   */
   private paymentNetworkWithEscrow: PaymentTypes.IPaymentNetworkWithEscrow | null = null;
 
   /**
    * Creates an instance of Request
    *
-   * @param requestLogic Instance of the request-logic layer
    * @param requestId ID of the Request
-   * @param paymentNetwork Instance of a payment network to manage the request
-   * @param contentDataManager Instance of content data manager
+   * @param requestLogic Instance of the request-logic layer
+   * @param paymentNetwork Instance of a payment network with escrow
    * @param requestLogicCreateResult return from the first request creation (optimization)
    * @param options options
    */
@@ -778,11 +773,18 @@ export class RequestWithEscrow extends Request {
    */
   public async refreshBalance(): Promise<Types.Payment.IBalanceWithEvents<any> | null> {
     
-    super.refreshBalance();
+    if (!this.paymentNetworkWithEscrow) {
+      throw new Error('Cannot refresh balance of a request with escrow without payment network with escrow');
+    }
+
+    this.balance =
+      this.paymentNetwork && this.requestData
+        ? await this.paymentNetworkWithEscrow.getWithdrawnBalance(this.requestData)
+        : this.balance;
 
     this.committedBalance =
-      this.paymentNetwork && this.requestData && this.paymentNetworkWithEscrow
-        ? await this.paymentNetworkWithEscrow.getWithdrawnBalance(this.requestData)
+      this.paymentNetwork && this.requestData
+        ? await this.paymentNetwork.getBalance(this.requestData)
         : this.committedBalance;
 
     return this.balance;

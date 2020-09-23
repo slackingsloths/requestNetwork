@@ -6,8 +6,8 @@ import { ethers } from 'ethers';
 const erc20proxyContractAbiFragment = [
 //   'event TransferWithReference(address tokenAddress,address to,uint256 amount,bytes indexed paymentReference)',
 //   'event TransferWithReferenceAndFee(address tokenAddress, address to,uint256 amount,bytes indexed paymentReference,uint256 feeAmount,address feeAddress);',
-  'event EscrowUnlocked(bytes indexed paymentReference, uint256 amount, address payee)',
-  'event EscrowLocked(bytes indexed paymentReference, uint256 amount, address payee)'
+  'event EscrowUnlocked(bytes indexed paymentReference, uint256 amount, address payee, address paymentToken)',
+  'event EscrowLocked(bytes indexed paymentReference, uint256 amount, address payee, address paymentToken)'
 ];
 
 /**
@@ -86,9 +86,8 @@ export default class ProxyERC20InfoRetriever
       // Keeps only the log with the right token and the right destination address
       .filter(
         log => {
-          // TODO: add back for more currencies
-          // log.parsedLog.values.tokenAddress.toLowerCase() ===
-          //   this.tokenContractAddress.toLowerCase() &&
+          log.parsedLog.values.paymentToken.toLowerCase() ===
+             this.tokenContractAddress.toLowerCase() &&
           log.parsedLog.values.payee.toLowerCase() === this.toAddress.toLowerCase(),
         }
       )
