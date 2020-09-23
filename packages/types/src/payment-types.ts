@@ -43,6 +43,11 @@ export interface IPaymentNetwork<TEventParameters = any> {
   getBalance(request: RequestLogic.IRequest): Promise<IBalanceWithEvents<TEventParameters>>;
 }
 
+/** Interface of the class to manage a payment network  */
+export interface IPaymentNetworkWithEscrow<TEventParameters = any> extends IPaymentNetwork<TEventParameters> {
+  getWithdrawnBalance(request: RequestLogic.IRequest): Promise<IBalanceWithEvents<TEventParameters>>;
+}
+
 /** Interface of the class to manage the bitcoin provider API */
 export interface IBitcoinDetectionProvider {
   getAddressBalanceWithEvents: (
@@ -85,6 +90,7 @@ export interface IPaymentNetworkEvent<TEventParameters> {
 export enum EVENTS_NAMES {
   PAYMENT = 'payment',
   REFUND = 'refund',
+  COMMITTED = 'committed'
 }
 
 /** List of payment networks available (abstract the extensions type) */

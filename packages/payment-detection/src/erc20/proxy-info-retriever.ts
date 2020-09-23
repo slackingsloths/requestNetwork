@@ -2,9 +2,12 @@ import { PaymentTypes } from '@requestnetwork/types';
 import { ethers } from 'ethers';
 
 // The ERC20 proxy smart contract ABI fragment containing TransferWithReference event
+// TODO This is just a quick POC
 const erc20proxyContractAbiFragment = [
-  'event TransferWithReference(address tokenAddress,address to,uint256 amount,bytes indexed paymentReference)',
-  'event TransferWithReferenceAndFee(address tokenAddress, address to,uint256 amount,bytes indexed paymentReference,uint256 feeAmount,address feeAddress);',
+//   'event TransferWithReference(address tokenAddress,address to,uint256 amount,bytes indexed paymentReference)',
+//   'event TransferWithReferenceAndFee(address tokenAddress, address to,uint256 amount,bytes indexed paymentReference,uint256 feeAmount,address feeAddress);',
+  'event EscrowUnlocked(bytes indexed paymentReference, uint256 amount, address payee)',
+  'event EscrowLocked(bytes indexed paymentReference, uint256 amount, address payee)'
 ];
 
 /**
@@ -51,36 +54,27 @@ export default class ProxyERC20InfoRetriever
    * Retrieves transfer events for the current contract, address and network.
    */
   public async getTransferEvents(): Promise<PaymentTypes.ERC20PaymentNetworkEvent[]> {
+    console.log(`Will fetch nothing if ${this.tokenContractAddress} is not FAU`);
     // Create a filter to find all the Transfer logs for the toAddress
-    const filter = this.contractProxy.filters.TransferWithReference(
-      null,
-      null,
-      null,
-      '0x' + this.paymentReference,
-    ) as ethers.providers.Filter;
+    let filter: ethers.providers.Filter;
+    if (this.eventName === PaymentTypes.EVENTS_NAMES.COMMITTED) {
+      filter = this.contractProxy.filters.EscrowLocked(
+        '0x' + this.paymentReference,
+        null,
+        null,
+      ) as ethers.providers.Filter;
+    } else {
+      filter = this.contractProxy.filters.EscrowUnlocked(
+        '0x' + this.paymentReference,
+        null,
+        null,
+      ) as ethers.providers.Filter;
+    }
     filter.fromBlock = this.proxyCreationBlockNumber;
     filter.toBlock = 'latest';
 
     // Get the proxy contract event logs
-    const proxyLogs = await this.provider.getLogs(filter);
-
-    // Create a filter to find all the Fee Transfer logs with the payment reference
-    const feeFilter = this.contractProxy.filters.TransferWithReferenceAndFee(
-      null,
-      null,
-      null,
-      '0x' + this.paymentReference,
-      null,
-      null,
-    ) as ethers.providers.Filter;
-    feeFilter.fromBlock = this.proxyCreationBlockNumber;
-    feeFilter.toBlock = 'latest';
-
-    // Get the fee proxy contract event logs
-    const feeProxyLogs = await this.provider.getLogs(feeFilter);
-
-    // Merge both events
-    const logs = [...proxyLogs, ...feeProxyLogs];
+    const logs = await this.provider.getLogs(filter);
 
     // Parses, filters and creates the events from the logs with the payment reference
     const eventPromises = logs
@@ -90,20 +84,20 @@ export default class ProxyERC20InfoRetriever
         return { parsedLog, log };
       })
       // Keeps only the log with the right token and the right destination address
-      .filter(
-        log =>
-          log.parsedLog.values.tokenAddress.toLowerCase() ===
-            this.tokenContractAddress.toLowerCase() &&
-          log.parsedLog.values.to.toLowerCase() === this.toAddress.toLowerCase(),
-      )
+      //.filter(
+        //log => true
+          // TODO: add back for more currencies
+          // log.parsedLog.values.tokenAddress.toLowerCase() ===
+          //   this.tokenContractAddress.toLowerCase() &&
+          // TODO: add back for more security
+          // log.parsedLog.values.to.toLowerCase() === this.toAddress.toLowerCase(),
+      //)
       // Creates the balance events
       .map(async t => ({
         amount: t.parsedLog.values.amount.toString(),
         name: this.eventName,
         parameters: {
           block: t.log.blockNumber,
-          feeAddress: t.parsedLog.values.feeAddress || undefined,
-          feeAmount: t.parsedLog.values.feeAmount?.toString() || undefined,
           to: this.toAddress,
           txHash: t.log.transactionHash,
         },

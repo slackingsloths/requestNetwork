@@ -22,7 +22,7 @@ export default class Request {
   public readonly requestId: RequestLogicTypes.RequestId;
 
   private requestLogic: RequestLogicTypes.IRequestLogic;
-  private paymentNetwork: PaymentTypes.IPaymentNetwork | null = null;
+  protected paymentNetwork: PaymentTypes.IPaymentNetwork | null = null;
   private contentDataExtension: ContentDataExtension | null;
   private emitter: EventEmitter;
 
@@ -34,7 +34,7 @@ export default class Request {
   /**
    * Data of the request (see request-logic)
    */
-  private requestData: RequestLogicTypes.IRequest | null = null;
+  protected requestData: RequestLogicTypes.IRequest | null = null;
 
   /**
    * Pending data of the request (see request-logic)
@@ -54,8 +54,8 @@ export default class Request {
   /**
    * Balance and payments/refund events
    */
-  private balance: PaymentTypes.IBalanceWithEvents | null = null;
-
+  protected balance: PaymentTypes.IBalanceWithEvents | null = null;
+  
   /**
    * if true, skip the payment detection
    */
@@ -732,5 +732,58 @@ export default class Request {
    */
   public disablePaymentDetection(): void {
     this.skipPaymentDetection = true;
+  }
+}
+
+export class RequestWithEscrow extends Request {
+
+  /**
+   * Balance and payments/refund events
+   */
+  private withdrawnBalance: PaymentTypes.IBalanceWithEvents | null = null;
+  /**
+   * Balance and payments/refund events
+   */
+  private paymentNetworkWithEscrow: PaymentTypes.IPaymentNetworkWithEscrow | null = null;
+
+  /**
+   * Creates an instance of Request
+   *
+   * @param requestLogic Instance of the request-logic layer
+   * @param requestId ID of the Request
+   * @param paymentNetwork Instance of a payment network to manage the request
+   * @param contentDataManager Instance of content data manager
+   * @param requestLogicCreateResult return from the first request creation (optimization)
+   * @param options options
+   */
+  constructor(
+    requestId: RequestLogicTypes.RequestId,
+    requestLogic: RequestLogicTypes.IRequestLogic,
+    options?: {
+      paymentNetwork?: PaymentTypes.IPaymentNetworkWithEscrow | null;
+      contentDataExtension?: ContentDataExtension | null;
+      requestLogicCreateResult?: RequestLogicTypes.IReturnCreateRequest;
+      skipPaymentDetection?: boolean;
+    },
+  ) {
+    super(requestId, requestLogic, options);
+    this.paymentNetworkWithEscrow = options?.paymentNetwork || null;
+  }
+
+  /**
+   * Refresh only the balance of the request and return it
+   *
+   * @returns return the balance
+   */
+  public async refreshBalance(): Promise<Types.Payment.IBalanceWithEvents<any> | null> {
+    
+    super.refreshBalance();
+
+    this.withdrawnBalance =
+      this.paymentNetwork && this.requestData && this.paymentNetworkWithEscrow
+        ? await this.paymentNetworkWithEscrow.getWithdrawnBalance(this.requestData)
+        : this.withdrawnBalance;
+
+    return this.balance;
   }
 }

@@ -1,4 +1,4 @@
-import { erc20FeeProxyArtifact } from '@requestnetwork/smart-contracts';
+import { escrowArtifact } from '@requestnetwork/smart-contracts';
 import {
   AdvancedLogicTypes,
   ExtensionTypes,
@@ -21,7 +21,7 @@ class VersionNotSupported extends Error {}
 /**
  * Handle payment networks with ERC20 fee proxy contract extension
  */
-export default class PaymentNetworkERC20FeeProxyContract implements PaymentTypes.IPaymentNetwork {
+export default class PaymentNetworkERC20FeeProxyContract implements PaymentTypes.IPaymentNetworkWithEscrow {
   private extension: ExtensionTypes.PnFeeReferenceBased.IFeeReferenceBased;
   /**
    * @param extension The advanced logic payment network extensions
@@ -119,7 +119,87 @@ export default class PaymentNetworkERC20FeeProxyContract implements PaymentTypes
     try {
       const paymentAddress = paymentNetwork.values.paymentAddress;
       const refundAddress = paymentNetwork.values.refundAddress;
-      const feeAddress = paymentNetwork.values.feeAddress;
+      //const feeAddress = paymentNetwork.values.feeAddress;
+      const salt = paymentNetwork.values.salt;
+
+      let payments: PaymentTypes.IBalanceWithEvents = { balance: '0', events: [] };
+      if (paymentAddress) {
+        payments = await this.extractBalanceAndEvents(
+          request,
+          salt,
+          paymentAddress,
+          PaymentTypes.EVENTS_NAMES.COMMITTED,
+          paymentNetwork.version,
+        );
+      }
+
+      let refunds: PaymentTypes.IBalanceWithEvents = { balance: '0', events: [] };
+      if (refundAddress) {
+        refunds = await this.extractBalanceAndEvents(
+          request,
+          salt,
+          refundAddress,
+          PaymentTypes.EVENTS_NAMES.REFUND,
+          paymentNetwork.version,
+        );
+      }
+
+      // TODO This is a quick POC
+      //const fees = this.extractFeeAndEvents(feeAddress, [...payments.events, ...refunds.events]);
+      // TODO (PROT-1219): this is not ideal, since we're directly changing the request extension
+      // once the fees feature and similar payment extensions are more well established, we should define
+      // a better place to retrieve them from the request object them.
+      paymentNetwork.values.feeBalance = [];
+
+      const balance: string = new bigNumber(payments.balance || 0)
+        .sub(new bigNumber(refunds.balance || 0))
+        .toString();
+
+      const events: PaymentTypes.ERC20PaymentNetworkEvent[] = [
+        ...payments.events,
+        ...refunds.events,
+      ].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      return {
+        balance,
+        events,
+      };
+    } catch (error) {
+      let code: PaymentTypes.BALANCE_ERROR_CODE | undefined;
+      if (error instanceof NetworkNotSupported) {
+        code = PaymentTypes.BALANCE_ERROR_CODE.NETWORK_NOT_SUPPORTED;
+      }
+      if (error instanceof VersionNotSupported) {
+        code = PaymentTypes.BALANCE_ERROR_CODE.VERSION_NOT_SUPPORTED;
+      }
+      return getBalanceErrorObject(error.message, code);
+    }
+  }
+
+  /**
+   * Gets the balance and the payment/refund events
+   *
+   * @param request the request to check
+   * @param paymentNetworkId payment network id
+   * @param tokenContractAddress the address of the token contract
+   * @returns the balance and the payment/refund events
+   */
+  public async getWithdrawnBalance(
+    request: RequestLogicTypes.IRequest,
+  ): Promise<PaymentTypes.IBalanceWithEvents> {
+    const paymentNetworkId = ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT;
+    const paymentNetwork = request.extensions[paymentNetworkId];
+
+    if (!paymentNetwork) {
+      return getBalanceErrorObject(
+        `The request does not have the extension : ${paymentNetworkId}`,
+        PaymentTypes.BALANCE_ERROR_CODE.WRONG_EXTENSION,
+      );
+    }
+    try {
+      const paymentAddress = paymentNetwork.values.paymentAddress;
+      const refundAddress = paymentNetwork.values.refundAddress;
+      //const feeAddress = paymentNetwork.values.feeAddress;
       const salt = paymentNetwork.values.salt;
 
       let payments: PaymentTypes.IBalanceWithEvents = { balance: '0', events: [] };
@@ -144,11 +224,12 @@ export default class PaymentNetworkERC20FeeProxyContract implements PaymentTypes
         );
       }
 
-      const fees = this.extractFeeAndEvents(feeAddress, [...payments.events, ...refunds.events]);
+      // TODO This is a quick POC
+      //const fees = this.extractFeeAndEvents(feeAddress, [...payments.events, ...refunds.events]);
       // TODO (PROT-1219): this is not ideal, since we're directly changing the request extension
       // once the fees feature and similar payment extensions are more well established, we should define
       // a better place to retrieve them from the request object them.
-      paymentNetwork.values.feeBalance = fees;
+      paymentNetwork.values.feeBalance = [];
 
       const balance: string = new bigNumber(payments.balance || 0)
         .sub(new bigNumber(refunds.balance || 0))
@@ -197,8 +278,9 @@ export default class PaymentNetworkERC20FeeProxyContract implements PaymentTypes
     if (!network) {
       throw new NetworkNotSupported(`Payment network not supported by ERC20 payment detection`);
     }
-
-    const deploymentInformation = erc20FeeProxyArtifact.getDeploymentInformation(
+    
+    // TODO This is a quick POC const deploymentInformation = erc20FeeProxyArtifact.getDeploymentInformation(
+    const deploymentInformation = escrowArtifact.getDeploymentInformation(
       network,
       paymentNetworkVersion,
     );
