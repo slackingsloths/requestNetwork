@@ -1,4 +1,4 @@
-const artifactsEscrow = require('../../artifacts/escrow/BaseEscrow/artifacts.json');
+const artifactsEscrow = require('../../artifacts/InvoiceBasedEscrow/artifacts.json');
 const ARTIFACTS_VERSION: string = artifactsEscrow.lastVersion;
 
 /**
@@ -8,7 +8,7 @@ const ARTIFACTS_VERSION: string = artifactsEscrow.lastVersion;
 export function getContractAbi(): any {
   const artifactFilename: string = artifactsEscrow[ARTIFACTS_VERSION].artifact;
 
-  const artifact = require(`../../artifacts/escrow/BaseEscrow/${artifactFilename.replace(
+  const artifact = require(`../../artifacts/InvoiceBasedEscrow/${artifactFilename.replace(
     /\.[^/.]+$/,
     '',
   )}.json`);

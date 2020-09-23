@@ -20,6 +20,12 @@
           "internalType": "address",
           "name": "payee",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "paymentToken",
+          "type": "address"
         }
       ],
       "name": "EscrowLocked",
@@ -45,6 +51,12 @@
           "internalType": "address",
           "name": "payee",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "paymentToken",
+          "type": "address"
         }
       ],
       "name": "EscrowUnlocked",
@@ -54,20 +66,7 @@
       "inputs": [
         {
           "internalType": "bytes",
-          "name": "_paymentReference",
-          "type": "bytes"
-        }
-      ],
-      "name": "registerEscrowForRef",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes",
-          "name": "_paymentReference",
+          "name": "_paymentRef",
           "type": "bytes"
         },
         {
@@ -81,7 +80,7 @@
           "type": "address"
         }
       ],
-      "name": "informEscrowReceived",
+      "name": "escrowFAUWithReferenceUntilMilestone",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -90,7 +89,38 @@
       "inputs": [
         {
           "internalType": "bytes",
-          "name": "_paymentReference",
+          "name": "_paymentRef",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "confirmMilestone",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_paymentRef",
+          "type": "bytes"
+        }
+      ],
+      "name": "confirmAllMilestones",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_paymentRef",
           "type": "bytes"
         },
         {
@@ -102,9 +132,45 @@
           "internalType": "address",
           "name": "_payee",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_dueDate",
+          "type": "uint256"
         }
       ],
-      "name": "informWithdrawal",
+      "name": "escrowFAUWithReferenceUntilDueDate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_paymentRef",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "_paymentRef",
+          "type": "bytes"
+        }
+      ],
+      "name": "withdrawAll",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

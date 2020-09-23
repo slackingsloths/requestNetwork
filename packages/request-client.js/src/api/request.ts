@@ -711,6 +711,7 @@ export default class Request {
    * @returns return the balance
    */
   public async refreshBalance(): Promise<Types.Payment.IBalanceWithEvents<any> | null> {
+    // TODO balance = withdrawn now
     // TODO: PROT-1131 - add a pending balance
     this.balance =
       this.paymentNetwork && this.requestData
@@ -740,7 +741,7 @@ export class RequestWithEscrow extends Request {
   /**
    * Balance and payments/refund events
    */
-  private withdrawnBalance: PaymentTypes.IBalanceWithEvents | null = null;
+  public committedBalance: PaymentTypes.IBalanceWithEvents | null = null;
   /**
    * Balance and payments/refund events
    */
@@ -779,10 +780,10 @@ export class RequestWithEscrow extends Request {
     
     super.refreshBalance();
 
-    this.withdrawnBalance =
+    this.committedBalance =
       this.paymentNetwork && this.requestData && this.paymentNetworkWithEscrow
         ? await this.paymentNetworkWithEscrow.getWithdrawnBalance(this.requestData)
-        : this.withdrawnBalance;
+        : this.committedBalance;
 
     return this.balance;
   }

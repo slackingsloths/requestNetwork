@@ -3,7 +3,7 @@ import * as erc20ProxyArtifact from './erc20ProxyArtifact';
 import * as ethereumProxyArtifact from './ethereumProxyArtifact';
 import * as requestHashStorageArtifact from './requestHashStorageArtifact';
 import * as requestHashSubmitterArtifact from './requestHashSubmitterArtifact';
-import * as escrowArtifact from './escrowArtifact';
+import * as escrowArtifact from './InvoiceBasedEscrow';
 
 export {
   ethereumProxyArtifact,

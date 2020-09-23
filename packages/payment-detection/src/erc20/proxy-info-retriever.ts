@@ -84,14 +84,14 @@ export default class ProxyERC20InfoRetriever
         return { parsedLog, log };
       })
       // Keeps only the log with the right token and the right destination address
-      //.filter(
-        //log => true
+      .filter(
+        log => {
           // TODO: add back for more currencies
           // log.parsedLog.values.tokenAddress.toLowerCase() ===
           //   this.tokenContractAddress.toLowerCase() &&
-          // TODO: add back for more security
-          // log.parsedLog.values.to.toLowerCase() === this.toAddress.toLowerCase(),
-      //)
+          log.parsedLog.values.payee.toLowerCase() === this.toAddress.toLowerCase(),
+        }
+      )
       // Creates the balance events
       .map(async t => ({
         amount: t.parsedLog.values.amount.toString(),
