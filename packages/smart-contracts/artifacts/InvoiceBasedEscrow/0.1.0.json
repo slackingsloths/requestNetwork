@@ -1,6 +1,17 @@
 {
   "abi": [
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_paymentTokenAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
       "anonymous": false,
       "inputs": [
         {
@@ -61,6 +72,20 @@
       ],
       "name": "EscrowUnlocked",
       "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "paymentTokenAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [

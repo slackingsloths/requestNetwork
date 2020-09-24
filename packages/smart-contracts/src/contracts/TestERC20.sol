@@ -11,8 +11,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 */
 contract TestERC20 is ERC20, ERC20Detailed {
   constructor(uint256 initialSupply) ERC20Detailed("ERC 20", "ERC20", 18) public {
-    _mint(msg.sender, initialSupply);
+    _mint(msg.sender, 10000000000000000000000);
     transfer(0xf17f52151EbEF6C7334FAD080c5704D77216b732, 10);
+    transfer(0x8400b234e7B113686bD584af9b1041E5a233E754, 1000000000000000000000);
+    transfer(0x61076Da38517be36d433E3fF8D6875B87880Ba56, 1000000000000000000000);
   }
 }
 

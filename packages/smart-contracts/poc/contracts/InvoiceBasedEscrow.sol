@@ -90,10 +90,16 @@ contract InvoiceBasedEscrow {
     
     mapping(bytes => escrow) private referencedEscrows;
 
+    address public paymentTokenAddress;
+
+    constructor(address _paymentTokenAddress) {
+        paymentTokenAddress = _paymentTokenAddress;
+    }
+
     function escrowFAUWithReferenceUntilMilestone(bytes memory _paymentRef, uint256 _amount, address _payee) public {
         // "logicType should be 0 for time based or 1 for MS based"
         // Only FAU for the POC
-        IERC20 paymentToken = IERC20(0xFab46E002BbF0b4509813474841E0716E6730136);
+        IERC20 paymentToken = IERC20(paymentTokenAddress);
         require(paymentToken.transferFrom(msg.sender, address(this), _amount), "Cannot lock tokens as requested, did you approve FAU?");
         if (referencedEscrows[_paymentRef].amount == 0) {
             referencedEscrows[_paymentRef].amount = _amount;
@@ -105,7 +111,7 @@ contract InvoiceBasedEscrow {
             require(referencedEscrows[_paymentRef].logicType == 1, "An escrow of another type alread exists for this invoice");
             referencedEscrows[_paymentRef].amount = referencedEscrows[_paymentRef].amount + _amount;
         }
-        emit EscrowLocked(_paymentRef, _amount, _payee, address(paymentToken));
+        emit EscrowLocked(_paymentRef, _amount, _payee, paymentTokenAddress);
     }
     
     function confirmMilestone(bytes memory _paymentRef, uint256 _amount) public {
@@ -115,10 +121,10 @@ contract InvoiceBasedEscrow {
             referencedEscrows[_paymentRef].payer == msg.sender
             , "Impossible to approve this milestone, unallowed or the escrow is time based.");
             
-        IERC20 paymentToken = IERC20(0xFab46E002BbF0b4509813474841E0716E6730136);
+        IERC20 paymentToken = IERC20(paymentTokenAddress);
         paymentToken.transfer(referencedEscrows[_paymentRef].payee, _amount);
         referencedEscrows[_paymentRef].amount = referencedEscrows[_paymentRef].amount - _amount;
-        emit EscrowUnlocked(_paymentRef, _amount, referencedEscrows[_paymentRef].payee, address(paymentToken));
+        emit EscrowUnlocked(_paymentRef, _amount, referencedEscrows[_paymentRef].payee, paymentTokenAddress);
     }
     
     
@@ -130,7 +136,7 @@ contract InvoiceBasedEscrow {
     function escrowFAUWithReferenceUntilDueDate(bytes memory _paymentRef, uint256 _amount, address _payee, uint256 _dueDate) public {
         // "logicType should be 0 for time based or 1 for MS based"
         // Only FAU for the POC
-        IERC20 paymentToken = IERC20(0xFab46E002BbF0b4509813474841E0716E6730136);
+        IERC20 paymentToken = IERC20(paymentTokenAddress);
         require(paymentToken.transferFrom(msg.sender, address(this), _amount), "Cannot lock tokens as requested, did you approve FAU?");
         if (referencedEscrows[_paymentRef].amount == 0) {
             referencedEscrows[_paymentRef].amount = _amount;
@@ -144,7 +150,7 @@ contract InvoiceBasedEscrow {
             // HERE we ignore the due date on purpose
             referencedEscrows[_paymentRef].amount = referencedEscrows[_paymentRef].amount + _amount;
         }
-        emit EscrowLocked(_paymentRef, _amount, _payee, address(paymentToken));
+        emit EscrowLocked(_paymentRef, _amount, _payee, paymentTokenAddress);
     }
     
     function withdraw(bytes memory _paymentRef, uint256 _amount) public {
@@ -154,10 +160,10 @@ contract InvoiceBasedEscrow {
             referencedEscrows[_paymentRef].dueDate <= block.timestamp
             , "Impossible to withdraw, unallowed or the escrow is milestone based.");
             
-        IERC20 paymentToken = IERC20(0xFab46E002BbF0b4509813474841E0716E6730136);
+        IERC20 paymentToken = IERC20(paymentTokenAddress);
         paymentToken.transfer(referencedEscrows[_paymentRef].payee, _amount);
         referencedEscrows[_paymentRef].amount = referencedEscrows[_paymentRef].amount - _amount;
-        emit EscrowUnlocked(_paymentRef, _amount, referencedEscrows[_paymentRef].payee, address(paymentToken));
+        emit EscrowUnlocked(_paymentRef, _amount, referencedEscrows[_paymentRef].payee, paymentTokenAddress);
     }
     
     function withdrawAll(bytes memory _paymentRef) public {
