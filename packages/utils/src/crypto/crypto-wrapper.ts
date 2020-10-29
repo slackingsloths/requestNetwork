@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes as cryptoRandomBytes } from 'crypto';
+import * as sigUtil from 'eth-sig-util';
 
 /**
  * Functions to manage native crypto functions of nodeJs
@@ -6,8 +7,10 @@ import { createCipheriv, createDecipheriv, randomBytes as cryptoRandomBytes } fr
 export default {
   decryptWithAes256cbc,
   decryptWithAes256gcm,
+  decryptWithXsalsa20Poly1350,
   encryptWithAes256cbc,
   encryptWithAes256gcm,
+  encryptWithXsalsa20Poly1350,
   random32Bytes,
 };
 
@@ -15,6 +18,8 @@ export default {
 const AES_256_CBC_ALGORITHM = 'aes-256-cbc';
 // Algorithm name used for aes256-gcm encryption with the package 'crypto'
 const AES_256_GCM_ALGORITHM = 'aes-256-gcm';
+// Algorithm name used for x25519-xsalsa20-poly1305 encryption with the package 'eth-sig-util'
+const XSALSA20_POLY1350_ALGORITHM = 'x25519-xsalsa20-poly1305';
 
 // Size of the initialization vector used for the aes256-cbc & aes256-gcm encryption
 const INITIALIZATION_VECTOR_LENGTH = 16;
@@ -72,6 +77,43 @@ async function encryptWithAes256gcm(data: Buffer, key: Buffer): Promise<Buffer> 
 
   // Concat the IV and the encrypted data, the call of final() makes the cipher not usable and flush the buffer
   return Buffer.concat([iv, authTag, encrypted, final]);
+}
+
+/**
+ * Encrypts a string using x25519_xsalsa20_poly1350
+ *
+ * @param data the data to encrypt
+ * @param key the key that will be used for the encryption
+ *
+ * @returns Promise resolving a string containing the encrypted data as hex
+ */
+async function encryptWithXsalsa20Poly1350(data: string, key: string): Promise<Buffer> {
+  const encrypted = sigUtil.encrypt(key, { data }, XSALSA20_POLY1350_ALGORITHM);
+  const encbuffer = Buffer.from(JSON.stringify(encrypted), 'utf-8');
+  return encbuffer;
+}
+
+/**
+ * Decrypts an encrypted buffer using AES-256-cbc plus a random Initialization Vector (IV)
+ *
+ * @param encrypted the data to decrypt
+ * @param key key of the encryption
+ *
+ * @returns Promise resolving a buffer containing the data decrypted
+ */
+
+async function decryptWithXsalsa20Poly1350(encryptedData: Buffer, key: Buffer): Promise<Buffer> {
+  const ethenc = JSON.parse(encryptedData.toString('utf-8'));
+  const decrypted = sigUtil.decrypt(
+    {
+      version: ethenc.version,
+      nonce: ethenc.nonce,
+      ephemPublicKey: ethenc.ephemPublicKey,
+      ciphertext: ethenc.ciphertext,
+    },
+    key.toString('utf8').slice(2),
+  );
+  return Buffer.from(decrypted);
 }
 
 /**
@@ -133,14 +175,12 @@ async function decryptWithAes256gcm(encryptedAndIv: Buffer, key: Buffer): Promis
  * @returns Promise resolving the N bytes generated
  */
 async function randomBytes(n: number): Promise<Buffer> {
-  return new Promise(
-    (resolve, reject): any => {
-      cryptoRandomBytes(n, (error, buffer) => {
-        if (error) {
-          return reject(`Error generating random bytes: ${error}`);
-        }
-        return resolve(buffer);
-      });
-    },
-  );
+  return new Promise((resolve, reject): any => {
+    cryptoRandomBytes(n, (error, buffer) => {
+      if (error) {
+        return reject(`Error generating random bytes: ${error}`);
+      }
+      return resolve(buffer);
+    });
+  });
 }

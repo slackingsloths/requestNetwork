@@ -43,6 +43,26 @@ export const id2Raw = {
     'cf4a1d0bbef8bf0e3fa479a9def565af1b22ea6266294061bfb430701b54a83699e3d47bf52e9f0224dcc29a02721810f1f624f1f70ea3cc5f1fb752cfed379d',
 };
 
+export const id2MmRaw = {
+  address: '0x818b6337657a23f58581715fc610577292e521d0',
+  decryptionParams: {
+    key: '0x4025da5692759add08f98f4b056c41c71916a671cedc7584a80d73adc7fb43c0',
+    method: EncryptionTypes.METHOD.METAMASK,
+  },
+  encryptionParams: {
+    key:
+      'I2h89PhVzI0b0+D7gItzJz+UJ6yWv22PjGq7pODT/1E=',
+    method: EncryptionTypes.METHOD.METAMASK,
+  },
+  identity: {
+    type: IdentityTypes.TYPE.ETHEREUM_ADDRESS,
+    value: '0x818b6337657a23f58581715fc610577292e521d0',
+  },
+  privateKey: '0x4025da5692759add08f98f4b056c41c71916a671cedc7584a80d73adc7fb43c0',
+  publicKey:
+    'cf4a1d0bbef8bf0e3fa479a9def565af1b22ea6266294061bfb430701b54a83699e3d47bf52e9f0224dcc29a02721810f1f624f1f70ea3cc5f1fb752cfed379d',
+};
+
 const decryptedDataExpected = JSON.stringify({
   attribut1: 'VALUE',
   attribut2: 'Value',

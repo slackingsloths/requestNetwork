@@ -71,6 +71,17 @@ async function encrypt(
     };
   }
 
+  if (encryptionParams.method === EncryptionTypes.METHOD.XSALSA20_POLY1305) {
+    const encryptedDataBuffer = await Crypto.CryptoWrapper.encryptWithXsalsa20Poly1350(
+      data,
+      encryptionParams.key,
+    );
+    return {
+      type: EncryptionTypes.METHOD.XSALSA20_POLY1305,
+      value: encryptedDataBuffer.toString('base64'),
+    };
+  }
+
   throw new Error('encryptionParams.method not supported');
 }
 

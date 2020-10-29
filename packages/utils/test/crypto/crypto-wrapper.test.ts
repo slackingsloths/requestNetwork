@@ -4,6 +4,16 @@ import utils from '../../src/utils';
 const anyData = 'this is any data!';
 const arbitraryKey = '12345678901234567890123456789012';
 
+const id2MmRaw = {
+  encryptionParams: {
+    key:
+      'I2h89PhVzI0b0+D7gItzJz+UJ6yWv22PjGq7pODT/1E='
+  },
+  privateKey: '0x4025da5692759add08f98f4b056c41c71916a671cedc7584a80d73adc7fb43c0',
+  publicKey:
+    'cf4a1d0bbef8bf0e3fa479a9def565af1b22ea6266294061bfb430701b54a83699e3d47bf52e9f0224dcc29a02721810f1f624f1f70ea3cc5f1fb752cfed379d',
+};
+
 /* tslint:disable:no-unused-expression */
 describe('Utils.cryptoWrapper', () => {
   describe('random32Bytes', () => {
@@ -96,4 +106,50 @@ describe('Utils.cryptoWrapper', () => {
       }
     );
   });
+
+  describe('encryptWithXsalsa20Poly1350', () => {
+    it('can encrypt with the Xsalsa20Poly1350 algorithm', async () => {
+
+      const encrypted = await CryptoWrapper.encryptWithXsalsa20Poly1350(
+        anyData,
+        id2MmRaw.encryptionParams.key,
+      );
+      
+      expect(Buffer.isBuffer(encrypted)).toBe(true);
+      const privKey = Buffer.from(id2MmRaw.privateKey);
+
+       expect(
+        await CryptoWrapper.decryptWithXsalsa20Poly1350(encrypted, privKey)
+      ).toEqual(Buffer.from(anyData, 'utf8')); 
+    });
+  });
+  describe('decryptWithXsalsa20Poly1350', () => {
+    it(
+      'can decrypt a message encrypted with the Xsalsa20Poly1350 algorithm',
+      async () => {
+
+        // utf8 content of hex buffer below
+        /* {
+          "version": "x25519-xsalsa20-poly1305",
+          "nonce": "q7jQygbjJn3mY6w+JfM0iAd8s9dmXMME",
+          "ephemPublicKey": "xFajUp7fLJxobG8KI89/OtNeSsMRa/RSwgv36Ampcys=",
+          "ciphertext": "b4eYsKYszMhfOFrwH0AC9ctueCTgfjYOXmae2bNCPz08"
+        } */
+
+        const decrypted = await CryptoWrapper.decryptWithXsalsa20Poly1350(
+          Buffer.from(
+            '7b2276657273696f6e223a227832353531392d7873616c736132302d706f6c7931333035222c226e6f6e6365223a2271376a517967626a4a6e336d5936772b4a664d30694164387339646d584d4d45222c22657068656d5075626c69634b6579223a227846616a557037664c4a786f6247384b4938392f4f744e6553734d52612f52537767763336416d706379733d222c2263697068657274657874223a2262346559734b59737a4d68664f467277483041433963747565435467666a594f586d616532624e43507a3038227d',
+            'hex',
+          ),
+          Buffer.from(id2MmRaw.privateKey, 'utf-8'),
+        );
+
+        expect(Buffer.isBuffer(decrypted)).toBe(true);
+        expect(decrypted).toEqual(Buffer.from(anyData, 'utf8'));
+      }
+    );
+  });
+
+
+
 });

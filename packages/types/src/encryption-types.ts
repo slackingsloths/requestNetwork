@@ -27,4 +27,5 @@ export enum METHOD {
   ECIES = 'ecies',
   AES256_CBC = 'aes256-cbc',
   AES256_GCM = 'aes256-gcm',
+  XSALSA20_POLY1305 = 'x25519-xsalsa20-poly1305',
 }
