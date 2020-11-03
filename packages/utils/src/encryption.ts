@@ -130,5 +130,20 @@ async function decrypt(
     return dataBuffer.toString();
   }
 
+  if (encryptedData.type === EncryptionTypes.METHOD.XSALSA20_POLY1305) {
+    if (decryptionParams.method !== EncryptionTypes.METHOD.XSALSA20_POLY1305) {
+      throw new Error(
+        `decryptionParams.method should be ${EncryptionTypes.METHOD.XSALSA20_POLY1305}`,
+      );
+    }
+
+    const dataBuffer = await Crypto.CryptoWrapper.decryptWithXsalsa20Poly1350(
+      // remove the multi-format padding and decode from the base64 to a buffer
+      Buffer.from(encryptedData.value, 'base64'),
+      Buffer.from(decryptionParams.key, 'base64'),
+    );
+    return dataBuffer.toString();
+  }
+
   throw new Error('encryptedData method not supported');
 }
