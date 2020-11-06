@@ -3299,6 +3299,48 @@
   resolved "https://registry.yarnpkg.com/@redocly/react-dropdown-aria/-/react-dropdown-aria-2.0.11.tgz#532b864b329237e646abe45d0f8edc923e77370a"
   integrity sha512-rmuSC2JFFl4DkPDdGVrmffT9KcbG2AB5jvhxPIrOc1dO9mHRMUUftQY35KZlvWqqSSqVn+AM+J9dhiTo1ZqR8A==
 
+"@requestnetwork/epk-decryption@^0.3.22":
+  version "0.3.22"
+  resolved "https://registry.yarnpkg.com/@requestnetwork/epk-decryption/-/epk-decryption-0.3.22.tgz#331bc2f59d980cf464c2dae1ab0a15c0f1f69269"
+  integrity sha512-dOG233sMSTtgH3A/M6rQE9i1wz8tjdg4YlZdSZySYdLPBN9cknciIIRLU8w77o5euxh8V5cMk6aovu5qv/xSJA==
+  dependencies:
+    "@requestnetwork/multi-format" "0.13.0"
+    "@requestnetwork/types" "0.27.0"
+    "@requestnetwork/utils" "0.26.0"
+
+"@requestnetwork/multi-format@0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@requestnetwork/multi-format/-/multi-format-0.13.0.tgz#a8883fb2ab8afe6f62e850ba997706b6b5119389"
+  integrity sha512-wySzlcBeSnHZhl6AHoXd5UBLqcI+Upv/8Zyv4+rnH27C5UAR92q0sekO9p1wi5v0rPGCXIAEgwlfmH21OIeIEQ==
+  dependencies:
+    "@requestnetwork/types" "0.27.0"
+
+"@requestnetwork/types@0.27.0":
+  version "0.27.0"
+  resolved "https://registry.yarnpkg.com/@requestnetwork/types/-/types-0.27.0.tgz#3f05cbac584dc52db54fb41a33ff84747829f98e"
+  integrity sha512-X8505nxhkSwBX0onLRMN7smRkteO/aemrMIEVqECi7Cdd0UyP0vVLf0zpXCCUkA19n6kgC1jDylyUZPuROUVTg==
+  dependencies:
+    bn.js "5.1.3"
+    events "3.2.0"
+
+"@requestnetwork/utils@0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@requestnetwork/utils/-/utils-0.26.0.tgz#9f7e56c2a8c58b6ca71e68d3d0e2aad18186310e"
+  integrity sha512-NWP/ztyApLKEMmpqovT35iH2pn5mGhCd2cjICQPL4Am2TzYZtBKuutAYPerfp8zUscQQcfHxM6MysLfDOwZPfg==
+  dependencies:
+    "@requestnetwork/types" "0.27.0"
+    bn.js "5.1.3"
+    eth-crypto "1.8.0"
+
+"@requestnetwork/web3-signature@^0.4.24":
+  version "0.4.24"
+  resolved "https://registry.yarnpkg.com/@requestnetwork/web3-signature/-/web3-signature-0.4.24.tgz#3b6c7eb8216520467badaf5b0d7c372af34f5bf7"
+  integrity sha512-tA+EC/50xWqfm1oEEMg+cv0cS0yN7GIqxRFIskRp/XX93K4KG95LFdcCOK0CsaYeX3jm2p/6x5EWQneokeCmEw==
+  dependencies:
+    "@requestnetwork/types" "0.27.0"
+    "@requestnetwork/utils" "0.26.0"
+    web3-eth "1.3.0"
+
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
