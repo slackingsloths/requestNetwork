@@ -18,36 +18,43 @@ const id1Raw = {
 };
 
 const data = { What: 'ever', the: 'data', are: true };
-// const normalizedData = Utils.crypto.normalize(data);
 const hashData = Utils.crypto.normalizeKeccak256Hash(data).value;
 const signatureValueExpected = Utils.crypto.EcUtils.sign(id1Raw.signatureParams.privateKey, hashData);
 
 const mockWeb3: any = {
-  async getSigner(): Promise<any> {
-    return { signMessage: () => {return signatureValueExpected;} };
-  },
-};
+  getSigner: jest.fn().mockImplementation(() => ({signMessage: () => {return signatureValueExpected;} }))
+}
+
+// use of infura only to initialize Web3SignatureProvider - but web3 is mockup afterward
+const signProvider = new Web3SignatureProvider(new providers.InfuraProvider());
 
 /* tslint:disable:no-unused-expression */
 describe('web3-signature-provider', () => {
   describe('sign', () => {
     it('can sign', async () => {
-      const spy = jest.spyOn(mockWeb3, 'getSigner');
-
-      const signProvider = new Web3SignatureProvider(new providers.InfuraProvider());
-
       // we mock eth as ganache don't support personal.sign anymore
       signProvider.web3Provider = mockWeb3;
 
       await signProvider.sign(data, id1Raw.identity);
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(id1Raw.identity.value);
+      expect(mockWeb3.getSigner).toHaveBeenCalledTimes(1);
+      expect(mockWeb3.getSigner).toHaveBeenCalledWith(id1Raw.identity.value);
+    });
+
+    it('cannot sign if web3 throw', async () => {
+      const mockWeb3Throw: any = {
+        getSigner: () => ({signMessage: () => {throw {code: -32602};} })
+      }
+
+      // we mock eth as ganache don't support personal.sign anymore
+      signProvider.web3Provider = mockWeb3Throw;
+
+      await expect(
+        signProvider.sign(data, id1Raw.identity),
+      ).rejects.toThrowError(`Impossible to sign for the identity: ${id1Raw.identity.value}`);
     });
 
     it('cannot sign with different identity than ethereum address', async () => {
-      const signProvider = new Web3SignatureProvider(new providers.InfuraProvider());
-
       await expect(
         signProvider.sign(data, { type: 'otherType', value: '0x' } as any),
       ).rejects.toThrowError('Identity type not supported otherType');
