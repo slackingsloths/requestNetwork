@@ -57,7 +57,8 @@ export default class TransactionsFactory {
     if (
       !encryptionParams.every(
         (encryptionParam: EncryptionTypes.IEncryptionParameters) =>
-          encryptionParam.method === EncryptionTypes.METHOD.ECIES,
+          encryptionParam.method === EncryptionTypes.METHOD.ECIES ||
+          encryptionParam.method === EncryptionTypes.METHOD.XSALSA20_POLY1305,
       )
     ) {
       throw new Error(`encryptionParams method must be all: ${EncryptionTypes.METHOD.ECIES}`);

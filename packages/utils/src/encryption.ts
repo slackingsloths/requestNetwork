@@ -26,7 +26,14 @@ function getIdentityFromEncryptionParams(
       value: Crypto.EcUtils.getAddressFromPublicKey(encryptionParams.key),
     };
   }
-
+  if (encryptionParams.identity) {
+    if (encryptionParams.method === EncryptionTypes.METHOD.XSALSA20_POLY1305) {
+      return {
+        type: IdentityTypes.TYPE.ETHEREUM_ADDRESS,
+        value: encryptionParams.identity.value,
+      };
+    }
+  }
   throw new Error('encryptionParams.method not supported');
 }
 

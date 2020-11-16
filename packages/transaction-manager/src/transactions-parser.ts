@@ -112,6 +112,15 @@ export default class TransactionsParser {
       encryptionMethod === `${EncryptionTypes.METHOD.ECIES}-${EncryptionTypes.METHOD.AES256_GCM}`
     ) {
       channelKeyMethod = EncryptionTypes.METHOD.AES256_GCM;
+    } else if (encryptionMethod === `mix-${EncryptionTypes.METHOD.AES256_GCM}`) {
+      // const serializedAddress = Object.values(keys);
+      // get prefix of the key
+      // const prefix = keys[0].split(2);
+
+      // check prefix to know what kind of key it is
+
+      // set channelKeyMethod used to decrypt ChannelKey
+      channelKeyMethod = EncryptionTypes.METHOD.AES256_GCM;
     } else {
       throw new Error(`Encryption method not supported: ${encryptionMethod}`);
     }

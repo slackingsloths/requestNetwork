@@ -12,7 +12,10 @@ type IDecryptionParametersDictionary = Map<string, EncryptionTypes.IDecryptionPa
 export default class EthereumPrivateKeyDecryptionProvider
   implements DecryptionProviderTypes.IDecryptionProvider {
   /** list of supported encryption method */
-  public supportedMethods: EncryptionTypes.METHOD[] = [EncryptionTypes.METHOD.ECIES];
+  public supportedMethods: EncryptionTypes.METHOD[] = [
+    EncryptionTypes.METHOD.ECIES,
+    EncryptionTypes.METHOD.XSALSA20_POLY1305,
+  ];
   /** list of supported identity types */
   public supportedIdentityTypes: IdentityTypes.TYPE[] = [IdentityTypes.TYPE.ETHEREUM_ADDRESS];
 
@@ -67,7 +70,7 @@ export default class EthereumPrivateKeyDecryptionProvider
    */
   public async isIdentityRegistered(identity: IdentityTypes.IIdentity): Promise<boolean> {
     return Array.from(this.decryptionParametersDictionary.keys()).some(
-      address => identity.value.toLowerCase() === address.toLowerCase(),
+      (address) => identity.value.toLowerCase() === address.toLowerCase(),
     );
   }
 
@@ -132,7 +135,7 @@ export default class EthereumPrivateKeyDecryptionProvider
    * @returns all the identities registered
    */
   public getAllRegisteredIdentities(): IdentityTypes.IIdentity[] {
-    return Array.from(this.decryptionParametersDictionary.keys(), address => ({
+    return Array.from(this.decryptionParametersDictionary.keys(), (address) => ({
       type: IdentityTypes.TYPE.ETHEREUM_ADDRESS,
       value: address,
     }));

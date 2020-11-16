@@ -1,9 +1,13 @@
+import { IIdentity } from './identity-types';
+
 /** Parameters needed to encrypt */
 export interface IEncryptionParameters {
   // method of the encryption
   method: METHOD;
   // value used to encrypt
   key: string;
+  // used to store metamask address
+  identity?: IIdentity;
 }
 
 /** Parameters needed to decrypt */
