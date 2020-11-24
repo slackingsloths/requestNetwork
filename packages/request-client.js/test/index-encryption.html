@@ -42,14 +42,255 @@
       </tr>
     </table>
 
+<hr />
+    <div>
+      <div>
+        <h2>
+          Account Actions
+        </h2>
+        <button id="connectButton" disabled>
+          Connect
+        </button>
+        <br>
+        <br>
+        <b>1.</b>
+        <button id="getAccounts">
+          get eth_accounts
+        </button>
+        <p>
+          eth_accounts result: <h4><span id="getAccountsResult"></span></h4>
+        </p>
+      </div>
+    </div>
+
+  <div>
+    <h4>
+      Encrypt / Decrypt
+    </h4>
+    <b>2.</b>
+    <button id="getEncryptionKeyButton" disabled>
+      Get Encryption Key
+    </button>
+    <p>
+      Encryption key: <b><span id="encryptionKeyDisplay"></span></b>
+    </p>
+  <hr />
+  </div>
+  
+
+<div>
+  <div>
+    <h2>
+      Single Channel Actions
+    </h2>
+    <p>
+      symmetricKey:
+    <h4>
+      <span id="encryptedChannelExampleSymKey"></span>
+    </h4>
+    </p>
+    <p>
+      encryptedChannelExample:
+    <h4><pre id="encryptedChannelExample"></pre></h4>
+    </p>
+    <b>3.</b>
+    <button id="decryptChannelButton">
+      decryptChannel
+    </button>
+    <p>
+      channel key decrypted
+      <h4><span id="decryptedChannelResult"></span></h4>
+    </p>
+    <hr />
+  </div>
+</div>
+
+<!-- 2 Channel Example both are decrypted with a single delay between them (0,5 sec) -->
+<div>
+  <div>
+    <h2>
+      Two Channel Actions
+    </h2>
+    <p>
+      symmetricKeys:
+    <h4>
+      <span id="encryptedChannelExampleSymKey1"></span>
+    </h4>
+    <h4>
+      <span id="encryptedChannelExampleSymKey2"></span>
+    </h4>
+    </p>
+    <p>
+      encryptedChannelExamples:
+    <h4>
+      <pre id="encryptedChannelExample1"></pre>
+    </h4>
+    <h4>
+      <pre id="encryptedChannelExample2"></pre>
+    </h4>
+    </p>
+    <b>4.</b>
+    <button id="decryptChannelButton2">
+      decryptChannels
+    </button>
+    <p>
+      channel keys decrypted
+    <h4><span id="decryptedChannelResult1"></span></h4>
+    <h4><span id="decryptedChannelResult2"></span></h4>
+    </p>
+    <hr />
+  </div>
+</div>
+
+
+<!-- 5 Channel Example, 3 of which the keys are known and two are unknown -->
+<div>
+  <div>
+    <h2>
+      5-Channel Actions
+    </h2>
+    <p>
+      symmetricKeys:
+
+
+<table style="text-align:left">
+  <tr>
+    <th>1</th>
+    <td style="color:green" id="key1" >OK</td>
+    <td style="color:green" id="channel1" >OK</td>
+  </tr>
+  <tr>
+    <th>2</th>
+    <td style="color:green" id="key2">OK</td>
+    <td style="color:green" id="channel2">OK</td>
+  </tr>
+  <tr>
+    <th>3</th>
+    <td style="color:green" id="key3">OK</td>
+    <td style="color:green" id="channel3">OK</td>
+  </tr>
+  <tr>
+    <th>4</th>
+    <td style="color:green" id="key4">OK</td>
+    <td style="color:green" id="channel4">OK</td>
+  </tr>
+  <tr>
+    <th>5</th>
+    <td style="color:green" id="key5">OK</td>
+    <td style="color:green" id="channel5">OK</td>
+  </tr>
+</table>
+
+    <h4>
+      <span id="encryptedChannelExampleSymKey1"></span>
+    </h4>
+    <h4>
+      <span id="encryptedChannelExampleSymKey2"></span>
+    </h4>
+    </p>
+    <b>5.</b>
+    <button id="decryptChannelButton3">
+      decrypt missing Channels
+    </button>
+    <hr />
+  </div>
+</div>
+
     <script>
+      // import into metamask: 0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3
+
+
+      const onboardButton = document.getElementById('connectButton')
+      const getAccountsButton = document.getElementById('getAccounts')
+      const getAccountsResults = document.getElementById('getAccountsResult')
+      const getEncryptionKeyButton = document.getElementById('getEncryptionKeyButton')
+      const encryptButton = document.getElementById('encryptButton')
+      const decryptButton = document.getElementById('decryptButton')
+      const encryptionKeyDisplay = document.getElementById('encryptionKeyDisplay')
+      const cipherTextDisplay = document.getElementById('cipherTextDisplay')
+      const clearTextDisplay = document.getElementById('clearTextDisplay')
+      const encryptMessageInput = document.getElementById('encryptMessageInput')
+      
+      const encryptedChannelExample = document.getElementById('encryptedChannelExample')
+      const encryptedChannelExample2 = document.getElementById('encryptedChannelExample2')
+      const encryptedChannelExampleSymKey = document.getElementById('encryptedChannelExampleSymKey')
+      const encryptedChannelExampleSymKey1 = document.getElementById('encryptedChannelExampleSymKey1')
+      const encryptedChannelExampleSymKey2 = document.getElementById('encryptedChannelExampleSymKey2')
+      const { encryptedChannel, encryptedChannel1, encryptedChannel2, encryptedChannelSymKey, encryptedChannelSymKey1, encryptedChannelSymKey2 } = getMockData();
+
+      const decryptChannelButton = document.getElementById('decryptChannelButton')
+      const decryptChannelButton2 = document.getElementById('decryptChannelButton2')
+      const decryptedChannelResult = document.getElementById('decryptedChannelResult');
+      const decryptedChannelResult2 = document.getElementById('decryptedChannelResult2');
+
+      const tableKey1 = document.getElementById('key1');
+      const tableKey2 = document.getElementById('key2');
+      const tableKey3 = document.getElementById('key3');
+      const tableKey4 = document.getElementById('key4');
+      const tableKey5 = document.getElementById('key5');
+
+      const tableChannel1 = document.getElementById('channel1');
+      const tableChannel2 = document.getElementById('channel2');
+      const tableChannel3 = document.getElementById('channel3');
+      const tableChannel4 = document.getElementById('channel4');
+      const tableChannel5 = document.getElementById('channel5');
+
+      // store for metamask Accounts
+      let accounts;
+      let encryptionKey;
+      let decryptedKey;
+      let decryptedKey1;
+      let decryptedKey2;
+
+      let keyArray = new Array();
+
       window.addEventListener('load', async () => {
         // Modern dapp browsers...
         if (window.ethereum) {
           window.web3 = new Web3(window.ethereum);
           try {
             await window.ethereum.enable();
-            startTestSignatureWithMetamask(window.web3);
+            onboardButton.disabled = false;
+            getEncryptionKeyButton.disabled = false;
+            // encryptButton.disabled = false;
+            // decryptButton.disabled = false;
+            
+            onboardButton.innerText = "MetaMask Connected";
+            
+
+            encryptedChannelExample.innerText = JSON.stringify(encryptedChannel, undefined, 2);
+            encryptedChannelExample1.innerText = JSON.stringify(encryptedChannel1, undefined, 2);
+            encryptedChannelExample2.innerText = JSON.stringify(encryptedChannel2, undefined, 2);
+            
+            encryptedChannelExampleSymKey.innerText = encryptedChannelSymKey;
+            encryptedChannelExampleSymKey1.innerText = encryptedChannelSymKey1;
+            encryptedChannelExampleSymKey2.innerText = encryptedChannelSymKey2;
+
+            tableKey2.style.color = "red";
+            tableKey2.textContent = "Encrypted";
+
+            tableKey4.style.color = "red";
+            tableKey4.textContent = "Encrypted";
+
+            keyArray.push({chNo: 1, status: "OK", decKey: "j+WBe0w5B/0O8fbmrGRjTQN5B9rw7Fs1B8bpm7gniRQ=", encChannel:"04V0UcCdVLo/PprlJd9yO1rjeW+n+7Tpmxy2SoL1E+s1FlpgGiBzj2tO5Np88y+mLwaBCqZrYVaIYCLmAUhEDCdUM+etUQWTLhB+PVJ3y4z2h20FyudIvrLT79MciA", encKey:"05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiIrbmJDblllRytoZGlxdXBIdEVnQkpzMlE0cFZkVWdidSIsImVwaGVtUHVibGljS2V5IjoiZENoTzlON1ZPRzEyTU1NOHB2M2ZReUdwWWxEWkFUWCttZFhQVWtzSDZWRT0iLCJjaXBoZXJ0ZXh0IjoiQTZTVG0zWDVOL3RsOG83TVNvVkdNYzlVeStydmgxTEVCaFZhUHIvaTFoMFNVdTdQdllZSTZNTnNYdVRQZzkvMENkaWdKT2JHRkcrMWhiQ08ifQ"});
+            keyArray.push({ chNo: 2, status: "Encrypted", decKey: "lKCrxAgPfrbnhoJq0U0uV1EvRbaVNsqhalz4KhbzTYo=", encChannel: "04qB8XQHnLC8FG0IFaKZS/cFspXEYs6Bpl1cHRhMJphnN8sjY3ctfyInfIvzeEysJZxkloUsbsWtCWlvvIRlvhKPkkDgzaDUmVV+nE2fyR2lkXZwJlcVKYcWpTDP0F", encKey: "05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiJrdS9kWGdsc09DZnRERCtkWFk5enJkSG5iazR1d1l1KyIsImVwaGVtUHVibGljS2V5IjoiOHVVMG1lcFpxWHZ4VVQ1d1VTdGhwOEdtTTJvc2NJbVh3cXdxRG94QUJHcz0iLCJjaXBoZXJ0ZXh0IjoiY1dSWFpLSzNqais1NzRsUU9uYkNpeTViZS8zTDdjK3ZaQWRWQmROaENuMXJtM3pINU9GR2oxcHZpeDVZeTBTWGFYdHZDRVRuVzFGeU1BQ3kifQ==" });
+            keyArray.push({ chNo: 3, status: "OK", decKey: "aHgEopeyL3v3nBHbCsjJrigvgh/ap8WrniyIK7VpU4I=", encChannel: "04BMAw/SOXaAl0rlGYm+V2azqnyY8ERsX6+gV179RtmqeShGFJdkrz7D5rgUEXjc6fdVgeX+/T3IlzbF+RxfW2KyYfuNqYHbD6+I8RxDO7MjPBK9pghMJBNRaLKx1k", encKey: "05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiJmVWxCc3lHYnU3VjFyeXZZMzVmTVRzSWhnL09GL0tFcSIsImVwaGVtUHVibGljS2V5IjoiN24vRTJjcTFTMzlBTXBDbjRJTGVsOHNsTm9xUDlPMVpaMVcwTU1lVHVEbz0iLCJjaXBoZXJ0ZXh0Ijoid051aktiRDZYQmhRT1Rob2NXMGt3Yk1KTEhHWkpSL05ocGhocWlDOHBPRDZGQnBGK1QxNGpLS0JJcU5aaWd4ZTZ1bC9PazM2NU1FeFQ3R2gifQ==" });
+            keyArray.push({ chNo: 4, status: "Encrypted", decKey: "nKw5++/uoE/i3mACqeClAWKeJahpxIrSYBgDJxCv4II=", encChannel: "04bw7dsL5n2KPO1n+zBL6hcEcCPfItuF/cu771GBfQUjdvLvuwIwVjx9jJyIWtQrFTDS3q4mHRb1H0DRjmYEdekfWCt9EQEdXk75m5dNxTzAr46GT8dBM1ZEmlyFf9", encKey: "05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiJvNlZnU1VPNzFaemUxckxTaEJmS2hwdGlmOVdEbzFrbyIsImVwaGVtUHVibGljS2V5IjoiKzNjclZuam10TU54cWtDbW1QU3poanFmY001SlBRRHBqbCsxMjRjdlMydz0iLCJjaXBoZXJ0ZXh0IjoidC9TYXVzeGx2cjdVVUtZcHFadWhTQ1RXMTRKTUhLM1hVdVFja1FDd00xaVFhQU12dmVCU05BK3U0SFhlWHFBVHVtUzdINnlyTEEzdTlQUXMifQ==" });
+            keyArray.push({ chNo: 5, status: "OK", decKey: "87GFbp5EFIDD+VH9tQg+UCYDiAlbUJjYKAzZCBBu6oQ=", encChannel: "04mqgFbHy90+cFJqVho+xEfFw8medh3iXxAfmAmx9EXdBKtE1bbUsbyEuF6q1iTFaX+iYU22IXWGSS4rGAHiF+WSivsvbXb8ke7Dlhycwagq9bikglZN2s9F8m5xFp", encKey: "05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiJ5RE5nQ0lPRGVZK1NrejdKVk01WFQ0TlZIakJtQnBiayIsImVwaGVtUHVibGljS2V5IjoiR1JxaUFXNHJHTnJaNWNBL041UGMrRlJuNHF0dlJuVjROdU9sYnVWUTFDRT0iLCJjaXBoZXJ0ZXh0IjoiVHpNeFBIMXBpcEUrbTRyRTNNRExML0dCbzB1K3RjSWRTREQ0MzYwV1B2NmlEQjV5UjgxVElCenRmM1NiTHpoR3E5MEQ2Y2xxa05pdms1MTQifQ==" });
+
+            for (let index = 0; index < keyArray.length; index++) {
+              const element = keyArray[index];
+              const toChange = document.getElementById(("channel" + (index + 1)));
+
+              toChange.textContent = element.decKey;
+              if (element.status == "Encrypted") {
+                toChange.textContent = element.encKey;
+                toChange.style.color = "red";
+              }
+            }
+
+          
+            // startTestSignatureWithMetamask(window.web3);
           } catch (error) {
             // User denied account access...
             console.log(error);
@@ -119,62 +360,225 @@
             some: 'content',
             true: true,
           },
+          encryptedChannel: {
+            
+          encryptedData: '04rQ+VbYugHuBEtQVLe0eHWvj4Y9ta+8PnunigmW7uTqaxdecTPjAvSeEUMMTG9Bz49EdpiNqSGAds7QFjyIIxm4VM4X2FmM+dipifkmy/uuegA8enAjl6seCCpWag',
+            keys: {
+            '20627306090abab3a6e1400e9345bc60c78a8bef57': '05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiJBb0pObFNIeWdGcVdVbVdmNHB5M1VzbjJjVExFZmlMLyIsImVwaGVtUHVibGljS2V5IjoiQ1oxTWJpZVVjRklrbDZRMjFwcmJCMmQ1V2x3TDcwL0dUclVLZUhNc3dWUT0iLCJjaXBoZXJ0ZXh0IjoiSmhmRnBrT1hXbVI3OGV4Q0tpMitOc3REdTBubGFSTm9aMndtL1FMdmUyTW92bDB6VExoYWRkQmpBdXdrWjdIVXpNRXp4QTZEckxNcjc5K0MifQ=='
+          },
+          encryptionMethod: 'x25519-xsalsa20-poly1305'
+        
+          },
+          encryptedChannel1: {
+
+            encryptedData: '049V4povCuGYG8dxTH3s30i++DaLyqRiWak3oPCLWHXNVeFljVeJBlOqxePcDJMZoJWqK5yiTikCa6X1ujLmwCyZ2fT5u93L/+LIv4EHvL4Ts1l4hR0EvVXv7mIIQJ',
+            keys: {
+              '20627306090abab3a6e1400e9345bc60c78a8bef57': '05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiI5cUtRc1JZTHRwU3U0aXV4L2R3TEk4VmZERjFEQXBqMCIsImVwaGVtUHVibGljS2V5IjoiU3R6WFJDak82Q2x1RUp3OHRWY0IvckpHdWp2enppVHpBbHZvSDNZL2lCMD0iLCJjaXBoZXJ0ZXh0Ijoia2lPWUVLSjB3OFRLemVzYkxlNzFkMzB2WldMN1BhYlhuNDdjTkNucVpIN292V0x3NlZ6eGJKL0pKaUMyRFB4YWg0OUFtNWFYUkVzallwR0oifQ=='
+            },
+            encryptionMethod: 'x25519-xsalsa20-poly1305'
+
+          },
+          encryptedChannel2: {
+
+            encryptedData: '04/6rikv94n7hNbDgAqUDMv4oHDMjUb4lXRBTAJk+7216pIoZZMOFzEVnB2Kb4NTTwNZZ5huoIqlYfhtbD2AKO0pPtp9byxZuLZu8IA93O2zlBOvP8O+jyYSDXxf7F',
+            keys: {
+              '20627306090abab3a6e1400e9345bc60c78a8bef57': '05eyJ2ZXJzaW9uIjoieDI1NTE5LXhzYWxzYTIwLXBvbHkxMzA1Iiwibm9uY2UiOiI3SjArUkV6dGcvQTRGWVlRSnVGcDdVdHlDY2crU2UyWCIsImVwaGVtUHVibGljS2V5IjoiR3V1Z29qS1RxMzEvejRvNzR1SEJNeG5PeDNBcFgzQ1prUmtTbmtZOCtTRT0iLCJjaXBoZXJ0ZXh0IjoiT3RmcFUvMk94bSt4UnZLeWZicHNveDBaNXFiUXRJRmZOSnJkajBtRnJMeldrclRVRElnNDlaam1RZi9pWWZ4TjlaWlRCY3dSWWdIRStaQmsifQ=='
+            },
+            encryptionMethod: 'x25519-xsalsa20-poly1305'
+
+          },
+          encryptedChannelSymKey: 'OeHrh3b3NncdNDoKjwFeWJZHn0UTHQvj3bzQFfEiKbc=',
+          encryptedChannelSymKey1: 'lXy+k9pkhXBqRnS8Rpqm13j4LMksXMLtTL/8IF0NOmQ=',
+          encryptedChannelSymKey2: 'VvhTTHvBsotVEspYatY+lrsjOilQHR1DfqEY9txOoJA=',
         };
       }
 
-      async function startTestSignatureWithMetamask(web3) {
-        const {
-          contentData,
-          decryptionParameters,
-          encryptionParameters,
-          paymentNetwork,
-          requestCreationHash,
-          signatureInfo,
-          topics,
-        } = getMockData();
+      
 
-        // Initialize the signature provider
-        const signatureProvider = new Web3SignatureProvider.Web3SignatureProvider(web3.currentProvider);
 
-        // Initialize the decryption provider
-        const decryptionProvider = new EthereumPrivateKeyDecryptionProvider.EthereumPrivateKeyDecryptionProvider(
-          decryptionParameters,
-        );
 
-        // Initialize the library in local test mode
-        const requestNetwork = new RequestNetwork.RequestNetwork({
-          signatureProvider,
-          decryptionProvider,
-          // this is a test using the mock storage instead of a real request node
-          useMockStorage: true,
-        });
+  getAccountsButton.onclick = async () => {
+    try {
+      accounts = await window.ethereum.request({
+        method: 'eth_accounts',
+      })
+      getAccountsResults.innerHTML = accounts[0] || 'Not able to get accounts'
+    } catch (err) {
+      console.error(err)
+      getAccountsResults.innerHTML = `Error: ${err.message}`
+    }
+  }
 
-        // Create an encrypted request
-        const request = await requestNetwork._createEncryptedRequest(
-          {
-            contentData,
-            paymentNetwork,
-            requestInfo: requestCreationHash,
-            signer: requestCreationHash.payee,
-          },
-          [encryptionParameters],
-        );
-
-        console.log('request: ', request);
-
-        // Retrieve the previously created request from its ID
-        const requestFromId = await requestNetwork.fromRequestId(request.requestId);
-
-        // At any time, you can refresh the request data to check if there are changes
-        // await requestFromId.refresh();
-
-        // Get the data of the request
-        const { request: requestData, balance, meta } = requestFromId.getData();
-
-        console.log('requestData: ', requestData);
-        console.log('balance: ', balance);
-        console.log('meta: ', meta);
+  getEncryptionKeyButton.onclick = async () => {
+      try {
+        encryptionKey = await window.ethereum.request({
+          method: 'eth_getEncryptionPublicKey',
+          params: [accounts[0]],
+        })
+        // encryptMessageInput.disabled = false
+        encryptionKeyDisplay.innerText = encryptionKey;
+      } catch (error) {
+        encryptionKeyDisplay.innerText = `Error: ${error.message}`
+        encryptMessageInput.disabled = true
+        encryptButton.disabled = true
+        decryptButton.disabled = true
       }
+    }
+    
+    function base64ToHex(str) {
+        const raw = atob(str);
+        let result = '';
+        for (let i = 0; i < raw.length; i++) {
+          const hex = raw.charCodeAt(i).toString(16);
+          result += (hex.length === 2 ? hex : '0' + hex);
+        }
+        return result.toUpperCase();
+      }
+
+
+    decryptChannelButton.onclick = async () => {
+        try {
+          const channelText = JSON.parse(encryptedChannelExample.innerText)
+          const decr = Object.values(channelText.keys)[0].slice(2);
+          const decrHex = base64ToHex(decr);
+          
+          decryptedKey = await window.ethereum.request({
+            method: 'eth_decrypt',
+            params: ["0x"+decrHex, window.ethereum.selectedAddress],
+          })
+          decryptedChannelResult.innerText = decryptedKey;
+          if (encryptedChannelSymKey == decryptedKey){
+            decryptedChannelResult.style.color = "green"
+          }
+        } catch (error) {
+          cleartextDisplay.innerText = `Error: ${error.message}`
+        }
+      }
+
+      decryptChannelButton2.onclick = async () => {
+          try {
+            const channelText1 = JSON.parse(encryptedChannelExample1.innerText)
+            const channelText2 = JSON.parse(encryptedChannelExample2.innerText)
+            const decr1 = Object.values(channelText1.keys)[0].slice(2);
+            const decr2 = Object.values(channelText2.keys)[0].slice(2);
+
+            const decrHex1 = base64ToHex(decr1);
+            const decrHex2 = base64ToHex(decr2);
+
+            decryptedKey1 = await window.ethereum.request({
+              method: 'eth_decrypt',
+              params: ["0x" + decrHex1, window.ethereum.selectedAddress],
+            })
+            decryptedChannelResult1.innerText = decryptedKey1;
+
+            await new Promise(r => setTimeout(r, 500));
+
+            decryptedKey2 = await window.ethereum.request({
+              method: 'eth_decrypt',
+              params: ["0x" + decrHex2, window.ethereum.selectedAddress],
+            })
+            decryptedChannelResult2.innerText = decryptedKey2;
+
+
+            if (encryptedChannelSymKey1 == decryptedKey1) {
+              decryptedChannelResult1.style.color = "green"
+            }
+            if (encryptedChannelSymKey2 == decryptedKey2) {
+              decryptedChannelResult2.style.color = "green"
+            }
+          } catch (error) {
+            console.log(`Error: ${error.message}`);
+          }
+        }
+
+
+      decryptChannelButton3.onclick = async () => {
+          try {
+
+            for (let index = 0; index < keyArray.length; index++) {
+              const key = keyArray[index];
+
+              if (key.status == "Encrypted") {
+
+                const channelText = JSON.parse(JSON.stringify(key))
+                const decr = channelText.encKey.slice(2);
+                const decrHex = base64ToHex(decr);
+
+                decryptedKey = await window.ethereum.request({
+                  method: 'eth_decrypt',
+                  params: ["0x" + decrHex, window.ethereum.selectedAddress],
+                })
+
+                const toChange = document.getElementById(("key"+(index+1)));
+                const channelChange = document.getElementById(("channel" + (index + 1)));
+
+                key.status = "OK";
+                toChange.textContent = "OK";
+                channelChange.textContent = decryptedKey;
+                toChange.style.color = "green"
+                channelChange.style.color = "green"
+                await new Promise(r => setTimeout(r, 500));
+              }
+              
+            }
+
+          } catch (error) {
+            console.log(`Error: ${error.message}`);
+          }
+        }
+
+  async function startTestSignatureWithMetamask(web3) {
+    const {
+      contentData,
+      decryptionParameters,
+      encryptionParameters,
+      paymentNetwork,
+      requestCreationHash,
+      signatureInfo,
+      topics,
+    } = getMockData();
+
+    // Initialize the signature provider
+    const signatureProvider = new Web3SignatureProvider.Web3SignatureProvider(web3.currentProvider);
+
+    // Initialize the decryption provider
+    const decryptionProvider = new EthereumPrivateKeyDecryptionProvider.EthereumPrivateKeyDecryptionProvider(
+      decryptionParameters,
+    );
+
+    // Initialize the library in local test mode
+    const requestNetwork = new RequestNetwork.RequestNetwork({
+      signatureProvider,
+      decryptionProvider,
+      // this is a test using the mock storage instead of a real request node
+      useMockStorage: true,
+    });
+
+    // Create an encrypted request
+    const request = await requestNetwork._createEncryptedRequest(
+      {
+        contentData,
+        paymentNetwork,
+        requestInfo: requestCreationHash,
+        signer: requestCreationHash.payee,
+      },
+      [encryptionParameters],
+    );
+
+    // Retrieve the previously created request from its ID
+    const requestFromId = await requestNetwork.fromRequestId(request.requestId);
+
+    // At any time, you can refresh the request data to check if there are changes
+    await requestFromId.refresh();
+
+    // Get the data of the request
+    const { request: requestData, balance, meta } = requestFromId.getData();
+    const all = requestFromId.getData();
+
+    console.log('requestData: ', requestData);
+    console.log('balance: ', balance);
+    console.log('meta: ', meta);
+  }
     </script>
   </body>
 </html>
