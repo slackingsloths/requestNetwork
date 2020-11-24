@@ -61,6 +61,34 @@ export const idRaw3 = {
     'cf4a1d0bbef8bf0e3fa479a9def565af1b22ea6266294061bfb430701b54a83699e3d47bf52e9f0224dcc29a02721810f1f624f1f70ea3cc5f1fb752cfed379d',
 };
 
+export const idRawMetaMask = {
+  address: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
+  decryptionParams: {
+    key: '0x4025da5692759add08f98f4b056c41c71916a671cedc7584a80d73adc7fb43c0',
+    method: EncryptionTypes.METHOD.ECIES,
+  },
+  encryptionParams: {
+    key:
+      'cf4a1d0bbef8bf0e3fa479a9def565af1b22ea6266294061bfb430701b54a83699e3d47bf52e9f0224dcc29a02721810f1f624f1f70ea3cc5f1fb752cfed379d',
+    method: EncryptionTypes.METHOD.ECIES,
+  },
+  encryptionParametersMetaMask: {
+      key: '/ulztVpZ5kY6ymdsMGlHvVYcsVHXY+UQTiVbaxMtrGE=',
+      method: EncryptionTypes.METHOD.XSALSA20_POLY1305,
+      identity: {
+        type: IdentityTypes.TYPE.ETHEREUM_ADDRESS,
+        value: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'}
+  },
+  identity: {
+    type: IdentityTypes.TYPE.ETHEREUM_ADDRESS,
+    value: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
+  },
+  privateKey: '0x4025da5692759add08f98f4b056c41c71916a671cedc7584a80d73adc7fb43c0',
+  publicKey:
+    'cf4a1d0bbef8bf0e3fa479a9def565af1b22ea6266294061bfb430701b54a83699e3d47bf52e9f0224dcc29a02721810f1f624f1f70ea3cc5f1fb752cfed379d',
+};
+
+
 export const fakeDecryptionProvider: DecryptionProviderTypes.IDecryptionProvider = {
   decrypt: (
     data: EncryptionTypes.IEncryptedData,

@@ -36,7 +36,12 @@ export default class TransactionsFactory {
     encryptionParams: EncryptionTypes.IEncryptionParameters[],
   ): Promise<TransactionTypes.IPersistedTransaction> {
     // format encryption method property
-    const encryptionMethod = `${EncryptionTypes.METHOD.ECIES}-${EncryptionTypes.METHOD.AES256_GCM}`;
+    let encryptionMethod;
+
+    // only encryptionParams for MetaMask/Salsa have an identity field
+    encryptionMethod = encryptionParams[0].identity
+      ? `${EncryptionTypes.METHOD.XSALSA20_POLY1305}`
+      : `${EncryptionTypes.METHOD.ECIES}-${EncryptionTypes.METHOD.AES256_GCM}`;
 
     // Generate a key for the AES encryption
     const symmetricKey: string = await Utils.crypto.generate32BufferKey();
@@ -53,7 +58,7 @@ export default class TransactionsFactory {
       throw new Error('Data not parsable');
     }
 
-    // Check that all the encryption parameters given are ECIES (the only encryption method supported for now)
+    // Check that all the encryption parameters given are ECIES or Salsa (the only encryption methods supported for now)
     if (
       !encryptionParams.every(
         (encryptionParam: EncryptionTypes.IEncryptionParameters) =>
