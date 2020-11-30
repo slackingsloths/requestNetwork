@@ -1,0 +1,38 @@
+---
+name: Check SmartContract via MythX
+
+on: push
+
+jobs:
+  set-up-MythX:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get python
+        run: |
+          sudo apt-get install python3-setuptools
+          pip3 install mythx-cli
+  get-changed-files:
+    needs: set-up-MythX
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: get changed files
+        id: getfile
+        run: |
+          echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }}| xargs)"
+      - name: echo the changed files and sent to MythX
+        run: |
+          for i in ${{ steps.getfile.outputs.files }}
+          do
+              if [ ${i: -4} == ".sol" ]
+              then
+                echo $i
+                mythx --api-key "$MYTHX_API_KEY" -y  -ci analyze $i 
+              fi
+          done
+        env: 
+          MYTHX_API_KEY: ${{ secrets. MYTHX_API_KEY }}
+
+...
