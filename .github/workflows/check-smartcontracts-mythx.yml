@@ -7,14 +7,15 @@ jobs:
   set-up-MythX:
     runs-on: ubuntu-latest
     steps:
-      - name: get python
+      - name: get python and mythx
         run: |
           sudo apt-get install python3-setuptools
           pip3 install mythx-cli
-      - name: get changed files
-        uses: actions/checkout@v2
+          echo $PATH
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: get changed files
         id: getfile
         run: |
           echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }}| xargs)"
