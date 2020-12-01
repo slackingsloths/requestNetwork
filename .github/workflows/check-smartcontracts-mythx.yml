@@ -7,11 +7,14 @@ jobs:
   set-up-MythX:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@v2
+        with: 
+          python-version: '3.x'
       - name: get python and mythx
         run: |
           sudo apt-get install python3-setuptools
+          /opt/hostedtoolcache/Python/3.9.0/x64/bin/python -m pip install --upgrade pip
           pip3 install mythx-cli
-          echo $PATH
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -26,7 +29,7 @@ jobs:
               if [ ${i: -4} == ".sol" ]
               then
                 echo $i
-                mythx --api-key "$MYTHX_API_KEY" -y  -ci analyze $i 
+                mythx --api-key "$MYTHX_API_KEY" -y  --ci analyze $i 
               fi
           done
         env: 
