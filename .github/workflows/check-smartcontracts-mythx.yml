@@ -11,14 +11,10 @@ jobs:
         run: |
           sudo apt-get install python3-setuptools
           pip3 install mythx-cli
-  get-changed-files:
-    needs: set-up-MythX
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+      - name: get changed files
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: get changed files
         id: getfile
         run: |
           echo "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }}| xargs)"
