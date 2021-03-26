@@ -1,6 +1,7 @@
 import * as SmartContracts from '@requestnetwork/smart-contracts';
 import { StorageTypes } from '@requestnetwork/types';
 import Utils from '@requestnetwork/utils';
+import { ethers } from 'ethers';
 import { EventEmitter } from 'events';
 
 import EthereumStorage from '../src/ethereum-storage';
@@ -8,8 +9,7 @@ import IpfsConnectionError from '../src/ipfs-connection-error';
 
 /* eslint-disable no-magic-numbers */
 
-const web3HttpProvider = require('web3-providers-http');
-const web3Utils = require('web3-utils');
+import web3Utils from 'web3-utils';
 
 const ipfsGatewayConnection: StorageTypes.IIpfsGatewayConnection = {
   host: 'localhost',
@@ -25,28 +25,26 @@ const invalidHostIpfsGatewayConnection: StorageTypes.IIpfsGatewayConnection = {
   timeout: 1000,
 };
 
-const provider = new web3HttpProvider('http://localhost:8545');
+const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
+const wallet = ethers.Wallet.createRandom();
 const web3Connection: StorageTypes.IWeb3Connection = {
   networkId: StorageTypes.EthereumNetwork.PRIVATE,
   timeout: 1000,
-  web3Provider: provider,
+  signer: wallet.connect(provider),
 };
 
-const invalidHostNetworkProvider = new web3HttpProvider('http://nonexistentnetwork:8545');
+const invalidHostNetworkProvider = new ethers.providers.JsonRpcProvider(
+  'http://nonexistentnetwork:8545',
+);
 const invalidHostWeb3Connection: StorageTypes.IWeb3Connection = {
   networkId: StorageTypes.EthereumNetwork.PRIVATE,
   timeout: 1000,
-  web3Provider: invalidHostNetworkProvider,
+  signer: wallet.connect(invalidHostNetworkProvider),
 };
 
-const web3Eth = require('web3-eth');
-const eth = new web3Eth(provider);
-
-const contractHashSubmitter = new eth.Contract(
-  SmartContracts.requestHashSubmitterArtifact.getContractAbi(),
-  SmartContracts.requestHashSubmitterArtifact.getAddress('private'),
+const addressRequestHashSubmitter = SmartContracts.requestHashSubmitterArtifact.getAddress(
+  'private',
 );
-const addressRequestHashSubmitter = contractHashSubmitter._address;
 
 let ethereumStorage: EthereumStorage;
 

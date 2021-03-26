@@ -49,7 +49,6 @@
     "keyv": "4.0.3",
     "node-fetch": "2.6.1",
     "shelljs": "0.8.4",
-    "web3-eth": "1.3.4",
     "web3-utils": "1.3.4",
     "yargs": "16.2.0"
   },
