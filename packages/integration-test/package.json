@@ -52,7 +52,6 @@
     "@requestnetwork/transaction-manager": "0.26.6",
     "@requestnetwork/types": "0.32.0",
     "@requestnetwork/utils": "0.32.0",
-    "@truffle/hdwallet-provider": "1.2.3",
     "@types/jest": "26.0.13",
     "@types/node": "14.14.16",
     "ethers": "5.0.32",

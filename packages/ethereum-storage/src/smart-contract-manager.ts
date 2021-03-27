@@ -247,8 +247,8 @@ export default class SmartContractManager {
 
     // Get the fee from the size of the content
     // Throws an error if timeout is reached
-    const fee = await Utils.timeoutPromise<string>(
-      this.requestHashSubmitter.methods.getFeesAmount(feesParameters.contentSize).call(),
+    const fee = await Utils.timeoutPromise(
+      this.requestHashSubmitter.getFeesAmount(feesParameters.contentSize),
       this.timeout,
       'Web3 getFeesAmount connection timeout',
     );

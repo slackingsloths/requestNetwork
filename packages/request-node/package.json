@@ -44,7 +44,6 @@
     "@requestnetwork/ethereum-storage": "0.23.0",
     "@requestnetwork/types": "0.32.0",
     "@requestnetwork/utils": "0.32.0",
-    "@truffle/hdwallet-provider": "1.2.3",
     "chalk": "4.1.0",
     "cors": "2.8.5",
     "dotenv": "8.2.0",
