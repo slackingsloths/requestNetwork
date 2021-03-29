@@ -362,7 +362,7 @@ export default class SmartContractManager {
               receiptAfterConfirmation.blockNumber,
               receiptAfterConfirmation.transactionHash,
               cost.toString(),
-              fee,
+              fee.toString(),
               gasFee.toString(),
             )
               .then((ethereumMetadata: StorageTypes.IEthereumMetadata) => {
