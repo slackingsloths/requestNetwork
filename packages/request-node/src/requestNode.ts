@@ -3,7 +3,7 @@ import { LogTypes, StorageTypes } from '@requestnetwork/types';
 
 import cors from 'cors';
 import express from 'express';
-import * as httpStatus from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
 import KeyvFile from 'keyv-file';
 
 import Utils from '@requestnetwork/utils';
@@ -163,15 +163,15 @@ class RequestNode {
 
     // Route for health check
     router.get('/healthz', (_, serverResponse: any) => {
-      return serverResponse.status(httpStatus.OK).send('OK');
+      return serverResponse.status(StatusCodes.OK).send('OK');
     });
 
     // Route for readiness check
     router.get('/readyz', (_, serverResponse: any) => {
       if (this.initialized) {
-        return serverResponse.status(httpStatus.OK).send('OK');
+        return serverResponse.status(StatusCodes.OK).send('OK');
       }
-      return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+      return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
     });
 
     // Route for status check
@@ -179,7 +179,7 @@ class RequestNode {
       if (this.initialized) {
         return getStatus(clientRequest, serverResponse, this.dataAccess, this.logger);
       } else {
-        return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+        return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
       }
     });
 
@@ -188,7 +188,7 @@ class RequestNode {
       if (this.initialized) {
         return ipfsAdd(clientRequest, serverResponse, this.ethereumStorage, this.logger);
       } else {
-        return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+        return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
       }
     });
 
@@ -202,7 +202,7 @@ class RequestNode {
           this.logger,
         );
       } else {
-        return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+        return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
       }
     });
 
@@ -215,7 +215,7 @@ class RequestNode {
           this.logger,
         );
       } else {
-        return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+        return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
       }
     });
 
@@ -229,7 +229,7 @@ class RequestNode {
           this.logger,
         );
       } else {
-        return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+        return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
       }
     });
 
@@ -238,7 +238,7 @@ class RequestNode {
       if (this.initialized) {
         return getChannelsByTopic(clientRequest, serverResponse, this.dataAccess, this.logger);
       } else {
-        return serverResponse.status(httpStatus.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
+        return serverResponse.status(StatusCodes.SERVICE_UNAVAILABLE).send(NOT_INITIALIZED_MESSAGE);
       }
     });
 
@@ -246,7 +246,7 @@ class RequestNode {
 
     // Any other route returns error 404
     this.express.use((_clientRequest: any, serverResponse: any) => {
-      serverResponse.status(httpStatus.NOT_FOUND).send(NOT_FOUND_MESSAGE);
+      serverResponse.status(StatusCodes.NOT_FOUND).send(NOT_FOUND_MESSAGE);
     });
   }
 }

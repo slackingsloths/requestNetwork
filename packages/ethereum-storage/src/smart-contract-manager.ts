@@ -7,7 +7,7 @@ import EthereumBlocks from './ethereum-blocks';
 import EthereumUtils from './ethereum-utils';
 import GasPriceDefiner from './gas-price-definer';
 
-import { providers, Signer, BigNumber } from 'ethers';
+import { providers, Signer, BigNumber, CallOverrides, ContractReceipt } from 'ethers';
 import {
   RequestHashStorage,
   RequestHashStorage__factory,
@@ -22,17 +22,17 @@ import * as web3Utils from 'web3-utils';
 // Maximum number of attempt to create ethereum metadata when transaction to add hash and size to Ethereum is confirmed
 // 23 is the number of call of the transaction's confirmation event function
 // if higher the promise may block since the confirmation event function will not be called anymore
-const CREATING_ETHEREUM_METADATA_MAX_ATTEMPTS = 23;
+// const CREATING_ETHEREUM_METADATA_MAX_ATTEMPTS = 23;
 
 // Regular expression to detect if the Web3 API returns "query returned more than XXX results" error
 const MORE_THAN_XXX_RESULTS_REGEX = new RegExp('query returned more than [1-9][0-9]* results');
 
 // String to match if the Web3 API throws "Transaction was not mined within XXX seconds" error
-const TRANSACTION_POLLING_TIMEOUT = 'Transaction was not mined within';
+// const TRANSACTION_POLLING_TIMEOUT = 'Transaction was not mined within';
 
 const LENGTH_BYTES32_STRING = 64;
 
-type NewHashEvent = TypedEvent<
+export type NewHashEvent = TypedEvent<
   [string, string, string] & {
     hash: string;
     hashSubmitter: string;
@@ -125,9 +125,10 @@ export default class SmartContractManager {
     };
 
     this.signer = signer;
-    this.provider = signer.provider
-      ? signer.provider
-      : new providers.JsonRpcProvider(config.getDefaultEthereumNetwork());
+    if (!signer.provider) {
+      throw new Error('no provider');
+    }
+    this.provider = signer.provider;
 
     // Set the default transaction polling timeout to the value in our config
     // TODO
@@ -184,8 +185,19 @@ export default class SmartContractManager {
    * @return Promise resolving if the web3 provider is accessible, throw otherwise
    */
   public async checkWeb3ProviderConnection(timeout: number): Promise<void> {
+    const check = async () => {
+      let listening;
+      try {
+        listening = await (this.provider as providers.JsonRpcProvider).send('net_listening', []);
+      } catch (e) {
+        throw new Error('Error when trying to reach Web3 provider');
+      }
+      if (!listening) {
+        throw new Error('The Web3 provider is not listening');
+      }
+    };
     await Utils.timeoutPromise(
-      this.provider.getBlockNumber(),
+      check(),
       timeout,
       'The Web3 provider is not reachable, did you use the correct protocol (http/https)?',
     );
@@ -271,112 +283,113 @@ export default class SmartContractManager {
     // Send transaction to contract
     // TODO(PROT-181): Implement a log manager for the library
     // use it for the different events (error, transactionHash, receipt and confirmation)
-    return new Promise((resolve, reject) => {
-      // This boolean is set to true once the ethereum metadata has been created and the promise has been resolved
-      // When set to true, we use it to ignore next confirmation event function call
-      let ethereumMetadataCreated = false;
+    // This boolean is set to true once the ethereum metadata has been created and the promise has been resolved
+    // When set to true, we use it to ignore next confirmation event function call
 
-      // Keep the transaction hash for future needs
-      let transactionHash = '';
-      const transactionParameters = {
-        from: account,
-        gas: '100000',
-        gasPrice: gasPriceToUse,
-        nonce,
-        value: fee,
-      };
-      this.requestHashSubmitter.methods
-        .submitHash(contentHash, feesParametersAsBytes)
-        .send(transactionParameters)
-        .on('transactionHash', (hash: any) => {
-          // Store the transaction hash in case we need it in the future
-          transactionHash = hash;
-          this.logger.debug(
-            `Ethereum SubmitHash transaction: ${JSON.stringify({
-              hash,
-              ...transactionParameters,
-            })}`,
-          );
-        })
-        .on('error', async (transactionError: string) => {
-          // If failed because of polling timeout, try to resubmit the transaction with more gas
-          if (
-            transactionError.toString().includes(TRANSACTION_POLLING_TIMEOUT) &&
-            transactionHash
-          ) {
-            // If we didn't set the nonce, find the current transaction nonce
-            if (!nonce) {
-              const tx = await this.provider.getTransaction(transactionHash);
-              nonce = tx.nonce;
-            }
+    // Keep the transaction hash for future needs
+    const transactionParameters: CallOverrides = {
+      from: account,
+      gasLimit: '100000',
+      gasPrice: gasPriceToUse,
+      nonce,
+      value: fee,
+    };
+    const tx = await this.requestHashSubmitter.submitHash(
+      contentHash,
+      feesParametersAsBytes,
+      transactionParameters,
+    );
+    const receiptAfterConfirmation = await tx.wait(1);
+    return this.createEthereumMetaData(receiptAfterConfirmation, fee);
+    //   tx.on('transactionHash', (hash: any) => {
+    //     // Store the transaction hash in case we need it in the future
+    //     transactionHash = hash;
+    //     this.logger.debug(
+    //       `Ethereum SubmitHash transaction: ${JSON.stringify({
+    //         hash,
+    //         ...transactionParameters,
+    //       })}`,
+    //     );
+    //   })
+    //     .on('error', async (transactionError: string) => {
+    //       // If failed because of polling timeout, try to resubmit the transaction with more gas
+    //       if (
+    //         transactionError.toString().includes(TRANSACTION_POLLING_TIMEOUT) &&
+    //         transactionHash
+    //       ) {
+    //         // If we didn't set the nonce, find the current transaction nonce
+    //         if (!nonce) {
+    //           const tx = await this.provider.getTransaction(transactionHash);
+    //           nonce = tx.nonce;
+    //         }
 
-            // Get the new gas price for the transaction
-            const newGasPrice = await gasPriceDefiner.getGasPrice(
-              StorageTypes.GasPriceType.FAST,
-              this.networkName,
-            );
+    //         // Get the new gas price for the transaction
+    //         const newGasPrice = await gasPriceDefiner.getGasPrice(
+    //           StorageTypes.GasPriceType.FAST,
+    //           this.networkName,
+    //         );
 
-            // If the new gas price is higher than the previous, resubmit the transaction
-            if (newGasPrice.gt(gasPriceToUse)) {
-              // Retry transaction with the new gas price and propagate back the result
-              try {
-                resolve(
-                  await this.addHashAndSizeToEthereum(
-                    contentHash,
-                    feesParameters,
-                    newGasPrice,
-                    nonce,
-                  ),
-                );
-              } catch (error) {
-                reject(error);
-              }
-            } else {
-              // The transaction is stuck, but it doesn't seem to be a gas issue. Nothing better to do than to wait...
-              this.logger.warn(
-                `Transaction ${transactionHash} hasn't been mined for more than ${config.getTransactionPollingTimeout()} seconds. It may be stuck.`,
-              );
-            }
-          } else {
-            const logObject = JSON.stringify({
-              contentHash,
-              fee,
-              feesParametersAsBytes,
-              from: account,
-              gasPrice: gasPriceToUse,
-              nonce,
-            });
-            this.logger.error(`Failed transaction: ${logObject}`);
-            reject(Error(`Ethereum transaction error:  ${transactionError}`));
-          }
-        })
-        .on('confirmation', (confirmationNumber: number, receiptAfterConfirmation: any) => {
-          if (!ethereumMetadataCreated) {
-            const gasFee = BigNumber.from(receiptAfterConfirmation.gasUsed).mul(gasPriceToUse);
-            const cost = gasFee.add(BigNumber.from(fee));
+    //         // If the new gas price is higher than the previous, resubmit the transaction
+    //         if (newGasPrice.gt(gasPriceToUse)) {
+    //           // Retry transaction with the new gas price and propagate back the result
+    //           try {
+    //             resolve(
+    //               await this.addHashAndSizeToEthereum(
+    //                 contentHash,
+    //                 feesParameters,
+    //                 newGasPrice,
+    //                 nonce,
+    //               ),
+    //             );
+    //           } catch (error) {
+    //             reject(error);
+    //           }
+    //         } else {
+    //           // The transaction is stuck, but it doesn't seem to be a gas issue. Nothing better to do than to wait...
+    //           this.logger.warn(
+    //             `Transaction ${transactionHash} hasn't been mined for more than ${config.getTransactionPollingTimeout()} seconds. It may be stuck.`,
+    //           );
+    //         }
+    //       } else {
+    //         const logObject = JSON.stringify({
+    //           contentHash,
+    //           fee,
+    //           feesParametersAsBytes,
+    //           from: account,
+    //           gasPrice: gasPriceToUse,
+    //           nonce,
+    //         });
+    //         this.logger.error(`Failed transaction: ${logObject}`);
+    //         reject(Error(`Ethereum transaction error:  ${transactionError}`));
+    //       }
+    //     })
+    //     .on('confirmation', (confirmationNumber: number, receiptAfterConfirmation: any) => {
+    //       if (!ethereumMetadataCreated) {
+    //         const gasFee = BigNumber.from(receiptAfterConfirmation.gasUsed).mul(gasPriceToUse);
+    //         const cost = gasFee.add(BigNumber.from(fee));
 
-            // Try to create ethereum metadata
-            // If the promise rejects, which is likely to happen because the last block is not fetchable
-            // we retry the next event function call
-            this.createEthereumMetaData(
-              receiptAfterConfirmation.blockNumber,
-              receiptAfterConfirmation.transactionHash,
-              cost.toString(),
-              fee.toString(),
-              gasFee.toString(),
-            )
-              .then((ethereumMetadata: StorageTypes.IEthereumMetadata) => {
-                ethereumMetadataCreated = true;
-                resolve(ethereumMetadata);
-              })
-              .catch((e) => {
-                if (confirmationNumber >= CREATING_ETHEREUM_METADATA_MAX_ATTEMPTS) {
-                  reject(Error(`Maximum number of confirmation reached: ${e}`));
-                }
-              });
-          }
-        });
-    });
+    //         // Try to create ethereum metadata
+    //         // If the promise rejects, which is likely to happen because the last block is not fetchable
+    //         // we retry the next event function call
+    //         this.createEthereumMetaData(
+    //           receiptAfterConfirmation.blockNumber,
+    //           receiptAfterConfirmation.transactionHash,
+    //           cost.toString(),
+    //           fee.toString(),
+    //           gasFee.toString(),
+    //         )
+    //           .then((ethereumMetadata: StorageTypes.IEthereumMetadata) => {
+    //             ethereumMetadataCreated = true;
+    //             resolve(ethereumMetadata);
+    //           })
+    //           .catch((e) => {
+    //             if (confirmationNumber >= CREATING_ETHEREUM_METADATA_MAX_ATTEMPTS) {
+    //               reject(Error(`Maximum number of confirmation reached: ${e}`));
+    //             }
+    //           });
+    //       }
+    //     });
+    // });
   }
 
   // .on('transactionHash', (hash: any) => {
@@ -486,7 +499,10 @@ export default class SmartContractManager {
       throw Error(`contentHash not indexed on ethereum`);
     }
 
-    return this.createEthereumMetaData(event.blockNumber, event.transactionHash);
+    console.log(event.transactionHash);
+    const receipt = await this.provider.getTransactionReceipt(event.transactionHash);
+
+    return this.createEthereumMetaData(receipt);
   }
 
   /**
@@ -585,7 +601,7 @@ export default class SmartContractManager {
   public getConfig(): SmartContractManagerConfig {
     return {
       creationBlockNumberHashStorage: this.creationBlockNumberHashStorage,
-      currentProvider: '', //this.eth., // TODO
+      currentProvider: (this.provider as providers.JsonRpcProvider).connection?.url,
       hashStorageAddress: this.hashStorageAddress,
       hashSubmitterAddress: this.hashSubmitterAddress,
       networkName: this.networkName,
@@ -611,7 +627,7 @@ export default class SmartContractManager {
     try {
       const filter = this.requestHashStorage.filters.NewHash(null, null, null);
 
-      const events = (await Utils.retry(
+      const events = await Utils.retry(
         () =>
           Utils.timeoutPromise(
             this.requestHashStorage.queryFilter(filter, fromBlock, toBlockNumber),
@@ -619,7 +635,7 @@ export default class SmartContractManager {
             'Web3 getPastEvents connection timeout',
           ),
         this.options,
-      )()) as any;
+      )();
 
       this.logger.debug(`Events from ${fromBlock} to ${toBlock} fetched`, ['ethereum']);
 
@@ -664,7 +680,8 @@ export default class SmartContractManager {
     }
 
     const contentSize = web3Utils.hexToNumber(event.args.feesParameters);
-    const meta = await this.createEthereumMetaData(event.blockNumber, event.transactionHash);
+    const receipt = await this.provider.getTransactionReceipt(event.transactionHash);
+    const meta = await this.createEthereumMetaData(receipt);
 
     return {
       feesParameters: { contentSize },
@@ -683,38 +700,26 @@ export default class SmartContractManager {
    * @return IEthereumMetadata the metadata formatted
    */
   private async createEthereumMetaData(
-    blockNumber: number,
-    transactionHash: string,
-    cost?: string,
-    fee?: string,
-    gasFee?: string,
+    receipt: ContractReceipt,
+    fee?: BigNumber,
   ): Promise<StorageTypes.IEthereumMetadata> {
-    // Get the number confirmations of the block hosting the transaction
-    let blockConfirmation;
-    try {
-      blockConfirmation = await this.ethereumBlocks.getConfirmationNumber(blockNumber);
-    } catch (error) {
-      throw Error(`Error getting block confirmation number: ${error}`);
-    }
-
     // Get timestamp of the block hosting the transaction
     let blockTimestamp;
     try {
-      blockTimestamp = await this.ethereumBlocks.getBlockTimestamp(blockNumber);
+      blockTimestamp = await this.ethereumBlocks.getBlockTimestamp(receipt.blockNumber);
     } catch (error) {
-      throw Error(`Error getting block ${blockNumber} timestamp: ${error}`);
+      throw Error(`Error getting block ${receipt.blockNumber} timestamp: ${error}`);
     }
-
     return {
-      blockConfirmation,
-      blockNumber,
+      blockConfirmation: receipt.confirmations,
+      blockNumber: receipt.blockNumber,
       blockTimestamp,
-      cost,
-      fee,
-      gasFee,
+      cost: fee ? receipt.cumulativeGasUsed.add(fee).toString() : undefined,
+      fee: fee ? fee.toString() : undefined,
+      gasFee: receipt.cumulativeGasUsed.toString(),
       networkName: this.networkName,
       smartContractAddress: this.hashStorageAddress,
-      transactionHash,
+      transactionHash: receipt.transactionHash,
     };
   }
 
