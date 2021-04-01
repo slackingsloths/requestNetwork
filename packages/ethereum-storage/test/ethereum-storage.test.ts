@@ -1,7 +1,7 @@
 import * as SmartContracts from '@requestnetwork/smart-contracts';
 import { StorageTypes } from '@requestnetwork/types';
 import Utils from '@requestnetwork/utils';
-import { ethers } from 'ethers';
+import { ethers, providers } from 'ethers';
 import { EventEmitter } from 'events';
 
 import EthereumStorage from '../src/ethereum-storage';
@@ -68,7 +68,7 @@ const fakeSize2Bytes32Hex = web3Utils.padLeft(web3Utils.toHex(fakeSize2), 64);
 
 // Define a mock for getPastEvents to be independent of the state of ganache instance
 
-const pastEventsMock: any[] = [
+const pastEventsMock = [
   {
     blockNumber: 1,
     event: 'NewHash',
@@ -121,10 +121,13 @@ const pastEventsMock: any[] = [
   },
 ];
 /* eslint-disable  */
-const getPastEventsMock = () => Promise.resolve(pastEventsMock);
+const getPastEventsMock = (): any => Promise.resolve(pastEventsMock);
 
 describe('EthereumStorage', () => {
   describe('initialize', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
     it('cannot use functions when not initialized', async () => {
       const ethereumStorageNotInitialized: EthereumStorage = new EthereumStorage(
         'localhost',
@@ -166,14 +169,14 @@ describe('EthereumStorage', () => {
         `The list of bootstrap node in the ipfs config don't match the expected bootstrap nodes`,
       );
     });
-    fit('cannot initialize if ethereum node not reachable', async () => {
+    it('cannot initialize if ethereum node not reachable', async () => {
       const ethereumStorageNotInitialized: EthereumStorage = new EthereumStorage(
         'localhost',
         ipfsGatewayConnection,
         invalidHostWeb3Connection,
       );
       await expect(ethereumStorageNotInitialized.initialize()).rejects.toThrowError(
-        'Ethereum node is not accessible: Error: Error when trying to reach Web3 provider: Error: Invalid JSON RPC response: ""',
+        'Ethereum node is not accessible: Error: Error when trying to reach Web3 provider',
       );
     });
 
@@ -184,8 +187,11 @@ describe('EthereumStorage', () => {
         web3Connection,
       );
       jest
-        .spyOn(ethereumStorageNotInitialized.smartContractManager.provider, 'getBlockNumber')
-        .mockImplementation(() => Promise.reject());
+        .spyOn(
+          ethereumStorageNotInitialized.smartContractManager.provider as providers.JsonRpcProvider,
+          'send',
+        )
+        .mockImplementation(() => Promise.resolve(false));
 
       await expect(ethereumStorageNotInitialized.initialize()).rejects.toThrowError(
         'Ethereum node is not accessible: Error: The Web3 provider is not listening',
@@ -245,8 +251,7 @@ describe('EthereumStorage', () => {
     });
 
     afterEach(() => {
-      jest.clearAllMocks();
-      jest.resetAllMocks();
+      jest.restoreAllMocks();
     });
 
     it('cannot be initialized twice', async () => {
@@ -572,11 +577,11 @@ describe('EthereumStorage', () => {
       );
     });
 
-    fit('append content with an invalid web3 connection should throw an error', async () => {
+    it('append content with an invalid web3 connection should throw an error', async () => {
       await expect(
         ethereumStorage.updateEthereumNetwork(invalidHostWeb3Connection),
       ).rejects.toThrowError(
-        'Ethereum node is not accessible: Error: Error when trying to reach Web3 provider: Error: Invalid JSON RPC response: ""',
+        'Ethereum node is not accessible: Error: Error when trying to reach Web3 provider',
       );
     });
 

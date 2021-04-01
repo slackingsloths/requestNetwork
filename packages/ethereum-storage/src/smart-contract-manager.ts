@@ -300,7 +300,17 @@ export default class SmartContractManager {
       transactionParameters,
     );
     const receiptAfterConfirmation = await tx.wait(1);
-    return this.createEthereumMetaData(receiptAfterConfirmation, fee);
+
+    const gasFee = BigNumber.from(receiptAfterConfirmation.gasUsed).mul(gasPriceToUse);
+    const cost = gasFee.add(BigNumber.from(fee));
+
+    return this.createEthereumMetaData(
+      receiptAfterConfirmation.blockNumber,
+      receiptAfterConfirmation.transactionHash,
+      cost.toString(),
+      fee.toString(),
+      gasFee.toString(),
+    );
     //   tx.on('transactionHash', (hash: any) => {
     //     // Store the transaction hash in case we need it in the future
     //     transactionHash = hash;
@@ -499,10 +509,7 @@ export default class SmartContractManager {
       throw Error(`contentHash not indexed on ethereum`);
     }
 
-    console.log(event.transactionHash);
-    const receipt = await this.provider.getTransactionReceipt(event.transactionHash);
-
-    return this.createEthereumMetaData(receipt);
+    return this.createEthereumMetaData(event.blockNumber, event.transactionHash);
   }
 
   /**
@@ -680,8 +687,7 @@ export default class SmartContractManager {
     }
 
     const contentSize = web3Utils.hexToNumber(event.args.feesParameters);
-    const receipt = await this.provider.getTransactionReceipt(event.transactionHash);
-    const meta = await this.createEthereumMetaData(receipt);
+    const meta = await this.createEthereumMetaData(event.blockNumber, event.transactionHash);
 
     return {
       feesParameters: { contentSize },
@@ -700,26 +706,37 @@ export default class SmartContractManager {
    * @return IEthereumMetadata the metadata formatted
    */
   private async createEthereumMetaData(
-    receipt: ContractReceipt,
-    fee?: BigNumber,
+    blockNumber: number,
+    transactionHash: string,
+    cost?: string,
+    fee?: string,
+    gasFee?: string,
   ): Promise<StorageTypes.IEthereumMetadata> {
+    // Get the number confirmations of the block hosting the transaction
+    let blockConfirmation;
+    try {
+      blockConfirmation = await this.ethereumBlocks.getConfirmationNumber(blockNumber);
+    } catch (error) {
+      throw Error(`Error getting block confirmation number: ${error}`);
+    }
     // Get timestamp of the block hosting the transaction
     let blockTimestamp;
     try {
-      blockTimestamp = await this.ethereumBlocks.getBlockTimestamp(receipt.blockNumber);
+      blockTimestamp = await this.ethereumBlocks.getBlockTimestamp(blockNumber);
     } catch (error) {
-      throw Error(`Error getting block ${receipt.blockNumber} timestamp: ${error}`);
+      throw Error(`Error getting block ${blockNumber} timestamp: ${error}`);
     }
+
     return {
-      blockConfirmation: receipt.confirmations,
-      blockNumber: receipt.blockNumber,
+      blockConfirmation,
+      blockNumber,
       blockTimestamp,
-      cost: fee ? receipt.cumulativeGasUsed.add(fee).toString() : undefined,
-      fee: fee ? fee.toString() : undefined,
-      gasFee: receipt.cumulativeGasUsed.toString(),
+      cost,
+      fee,
+      gasFee,
       networkName: this.networkName,
       smartContractAddress: this.hashStorageAddress,
-      transactionHash: receipt.transactionHash,
+      transactionHash,
     };
   }
 

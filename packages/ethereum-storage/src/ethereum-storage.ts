@@ -123,7 +123,7 @@ export default class EthereumStorage implements StorageTypes.IStorage {
     try {
       await this.smartContractManager.checkWeb3ProviderConnection(WEB3_PROVIDER_TIMEOUT);
     } catch (error) {
-      throw Error(`Ethereum node is not accessible: ${error}`);
+      throw new Error(`Ethereum node is not accessible: ${error}`);
     }
 
     // check if contracts are deployed on ethereum
