@@ -47,10 +47,10 @@ export async function payAnyToErc20ProxyRequest(
   if (!paymentSettings.currency.network) {
     throw new Error('Cannot pay with a currency missing a network');
   }
-  const encodedTx = await encodePayAnyToErc20ProxyRequest(
+  const encodedTx = encodePayAnyToErc20ProxyRequest(
     request,
-    signerOrProvider,
     paymentSettings,
+    signerOrProvider,
     amount,
     feeAmount,
   );
@@ -77,13 +77,13 @@ export async function payAnyToErc20ProxyRequest(
  * @param feeAmountOverride optionally, the fee amount to pay. Defaults to the fee amount of the request.
  * @param network optionally, network of the payment. Defaults to 'mainnet'
  */
-export async function encodePayAnyToErc20ProxyRequest(
+export function encodePayAnyToErc20ProxyRequest(
   request: ClientTypes.IRequestData,
-  signerOrProvider: providers.Web3Provider | Signer = getProvider(),
   paymentSettings: IPaymentSettings,
+  signerOrProvider: providers.Web3Provider | Signer = getProvider(),
   amount?: BigNumberish,
   feeAmountOverride?: BigNumberish,
-): Promise<string> {
+): string {
   if (!paymentSettings.currency.network) {
     throw new Error('Cannot pay with a currency missing a network');
   }

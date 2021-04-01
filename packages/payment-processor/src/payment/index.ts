@@ -10,7 +10,14 @@ import { ITransactionOverrides } from './transaction-overrides';
 import { getNetworkProvider, getProvider, getSigner } from './utils';
 import { ISwapSettings } from './swap-erc20-fee-proxy';
 import { RequestLogicTypes } from '@requestnetwork/types';
-import { IPaymentSettings, payAnyToErc20ProxyRequest } from './any-to-erc20-proxy';
+import {
+  encodePayAnyToErc20ProxyRequest,
+  IPaymentSettings,
+  payAnyToErc20ProxyRequest,
+} from './any-to-erc20-proxy';
+import { encodePayErc20Request } from './erc20-proxy';
+import { encodePayErc20FeeRequest } from './erc20-fee-proxy';
+import { encodePayEthProxyRequest } from './eth-proxy';
 
 export const supportedNetworks = [
   ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT,
@@ -70,6 +77,28 @@ export async function payRequest(
     }
     case ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA:
       return payEthInputDataRequest(request, signer, amount, overrides);
+    default:
+      throw new UnsupportedNetworkError(paymentNetwork);
+  }
+}
+
+export function encodeRequestPayment(
+  request: ClientTypes.IRequestData,
+  paymentSettings?: IPaymentSettings,
+): string {
+  const paymentNetwork = getPaymentNetwork(request);
+  switch (paymentNetwork) {
+    case ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT:
+      return encodePayErc20Request(request);
+    case ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT:
+      return encodePayErc20FeeRequest(request);
+    case ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY:
+      if (!paymentSettings) {
+        throw new Error(`Payment settings are required for a ${paymentNetwork} request`);
+      }
+      return encodePayAnyToErc20ProxyRequest(request, paymentSettings);
+    case ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA:
+      return encodePayEthProxyRequest(request);
     default:
       throw new UnsupportedNetworkError(paymentNetwork);
   }
