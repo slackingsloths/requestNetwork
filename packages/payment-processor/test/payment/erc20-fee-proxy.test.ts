@@ -14,7 +14,7 @@ import {
   _getErc20FeeProxyPaymentUrl,
   payErc20FeeProxyRequest,
 } from '../../src/payment/erc20-fee-proxy';
-import { getRequestPaymentValues } from '../../src/payment/utils';
+import { getRequestPaymentValues } from '../../src/utils';
 
 /* eslint-disable no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unused-expressions */

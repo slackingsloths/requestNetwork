@@ -10,7 +10,7 @@ import {
 import Utils from '@requestnetwork/utils';
 
 import { encodePayEthProxyRequest, payEthProxyRequest } from '../../src/payment/eth-proxy';
-import { getRequestPaymentValues } from '../../src/payment/utils';
+import { getRequestPaymentValues } from '../../src/utils';
 
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/await-thenable */

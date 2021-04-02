@@ -7,7 +7,13 @@ import { _getErc20PaymentUrl, getAnyErc20Balance } from './erc20';
 import { payErc20Request } from './erc20';
 import { _getEthPaymentUrl, payEthInputDataRequest } from './eth-input-data';
 import { ITransactionOverrides } from './transaction-overrides';
-import { getNetworkProvider, getProvider, getSigner } from './utils';
+import {
+  getNetworkProvider,
+  getPaymentNetwork,
+  getProvider,
+  getRequestPaymentValues,
+  getSigner,
+} from '../utils';
 import { ISwapSettings } from './swap-erc20-fee-proxy';
 import { RequestLogicTypes } from '@requestnetwork/types';
 import {
@@ -15,20 +21,19 @@ import {
   IPaymentSettings,
   payAnyToErc20ProxyRequest,
 } from './any-to-erc20-proxy';
-import { encodePayErc20Request } from './erc20-proxy';
-import { encodePayErc20FeeRequest } from './erc20-fee-proxy';
 import { encodePayEthProxyRequest } from './eth-proxy';
+import {
+  erc20ConversionProxy,
+  erc20FeeProxyArtifact,
+  erc20ProxyArtifact,
+} from '@requestnetwork/smart-contracts';
+import { canSwapToPay } from '../swap';
 
 export const supportedNetworks = [
   ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT,
   ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT,
   ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA,
 ];
-
-const getPaymentNetwork = (request: ClientTypes.IRequestData): ExtensionTypes.ID | undefined => {
-  // eslint-disable-next-line
-  return Object.values(request.extensions).find((x) => x.type === 'payment-network')?.id;
-};
 
 /**
  * Error thrown when the network is not supported.
@@ -77,28 +82,6 @@ export async function payRequest(
     }
     case ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA:
       return payEthInputDataRequest(request, signer, amount, overrides);
-    default:
-      throw new UnsupportedNetworkError(paymentNetwork);
-  }
-}
-
-export function encodeRequestPayment(
-  request: ClientTypes.IRequestData,
-  paymentSettings?: IPaymentSettings,
-): string {
-  const paymentNetwork = getPaymentNetwork(request);
-  switch (paymentNetwork) {
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT:
-      return encodePayErc20Request(request);
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT:
-      return encodePayErc20FeeRequest(request);
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ANY_TO_ERC20_PROXY:
-      if (!paymentSettings) {
-        throw new Error(`Payment settings are required for a ${paymentNetwork} request`);
-      }
-      return encodePayAnyToErc20ProxyRequest(request, paymentSettings);
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA:
-      return encodePayEthProxyRequest(request);
     default:
       throw new UnsupportedNetworkError(paymentNetwork);
   }
@@ -214,42 +197,5 @@ async function getCurrencyBalance(
     }
     default:
       throw new UnsupportedNetworkError(paymentCurrency.network);
-  }
-}
-
-/**
- * Given a request, the function gives whether swap is supported for its payment network.
- * @param request the request that accepts or not swap to payment
- */
-export function canSwapToPay(request: ClientTypes.IRequestData): boolean {
-  const paymentNetwork = getPaymentNetwork(request);
-  return (
-    paymentNetwork !== undefined &&
-    paymentNetwork === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT
-  );
-}
-
-/**
- * Get a payment URL, if applicable to the payment network, for a request.
- * BTC: BIP21.
- * ERC20: EIP-681. (Warning, not widely used. Some wallets may not be able to pay.)
- * ETH: EIP-681. (Warning, not widely used. Some wallets may not be able to pay.)
- * @throws UnsupportedNetworkError if the network is not supported.
- * @param request the request to pay
- * @param amount optionally, the amount to pay. Defaults to remaining amount of the request.
- */
-export function _getPaymentUrl(request: ClientTypes.IRequestData, amount?: BigNumberish): string {
-  const paymentNetwork = getPaymentNetwork(request);
-  switch (paymentNetwork) {
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT:
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT:
-      return _getErc20PaymentUrl(request, amount);
-    case ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA:
-      return _getEthPaymentUrl(request, amount);
-    case ExtensionTypes.ID.PAYMENT_NETWORK_BITCOIN_ADDRESS_BASED:
-    case ExtensionTypes.ID.PAYMENT_NETWORK_TESTNET_BITCOIN_ADDRESS_BASED:
-      return getBtcPaymentUrl(request, amount);
-    default:
-      throw new UnsupportedNetworkError(paymentNetwork);
   }
 }

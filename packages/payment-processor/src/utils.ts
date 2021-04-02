@@ -9,6 +9,17 @@ import {
 } from '@requestnetwork/types';
 import Currency from '@requestnetwork/currency';
 
+/** Payment information of a request */
+export type IPaymentValues = {
+  paymentAddress: string;
+  paymentReference: string;
+  feeAmount?: string;
+  feeAddress?: string;
+  tokensAccepted?: string[];
+  maxRateTimespan?: string;
+  network?: string;
+};
+
 /**
  * Thrown when the library does not support a payment blockchain network.
  */
@@ -82,20 +93,20 @@ export function getPaymentNetworkExtension(
 }
 
 /**
+ * Utility to get the Payment Network ID of a Request
+ * @param request
+ */
+export const getPaymentNetwork = (
+  request: ClientTypes.IRequestData,
+): ExtensionTypes.ID | undefined => {
+  return getPaymentNetworkExtension(request)?.id;
+};
+
+/**
  * Utility to access the payment address, reference, and optional feeAmount and feeAddress of a Request.
  * @param request
  */
-export function getRequestPaymentValues(
-  request: ClientTypes.IRequestData,
-): {
-  paymentAddress: string;
-  paymentReference: string;
-  feeAmount?: string;
-  feeAddress?: string;
-  tokensAccepted?: string[];
-  maxRateTimespan?: string;
-  network?: string;
-} {
+export function getRequestPaymentValues(request: ClientTypes.IRequestData): IPaymentValues {
   const extension = getPaymentNetworkExtension(request);
   if (!extension) {
     throw new Error('no payment network found');
@@ -267,4 +278,29 @@ export function getAmountToPay(
     throw new Error('cannot pay a null amount');
   }
   return amountToPay;
+}
+
+/**
+ * Checks whether the given wallet (or, by default, the connected wallet) is a Multisig
+ */
+export async function isMultisig(
+  provider?: providers.Provider,
+  walletAddress?: string,
+): Promise<boolean> {
+  if (!provider) {
+    provider = getProvider();
+  }
+  if (!walletAddress) {
+    const web3Provider = provider as providers.Web3Provider;
+    if ('getSigner' in web3Provider) {
+      walletAddress = await web3Provider.getSigner().getAddress();
+    } else {
+      throw new Error(
+        'Cannot get wallet address. Either provide a Web3Provider or specify the wallet address',
+      );
+    }
+  }
+  const senderAddressCode = await provider.getCode(walletAddress);
+  // will return 0x if there is no code
+  return senderAddressCode?.length > 2;
 }

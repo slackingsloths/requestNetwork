@@ -4,7 +4,7 @@ import { erc20SwapToPayArtifact } from '@requestnetwork/smart-contracts';
 import { ClientTypes } from '@requestnetwork/types';
 
 import { ITransactionOverrides } from './transaction-overrides';
-import { getProvider, getSigner } from './utils';
+import { getProvider, getSigner } from '../utils';
 import { checkErc20Allowance, encodeApproveAnyErc20 } from './erc20';
 
 /**

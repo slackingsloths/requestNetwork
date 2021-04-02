@@ -1,11 +1,6 @@
 import { Wallet, providers, BigNumber } from 'ethers';
 
-import {
-  getAmountToPay,
-  getNetworkProvider,
-  getProvider,
-  getSigner,
-} from '../../src/payment/utils';
+import { getAmountToPay, getNetworkProvider, getProvider, getSigner } from '../../src/utils';
 
 describe('getAmountToPay', () => {
   it('returns the expectedAmount if balance is 0', () => {

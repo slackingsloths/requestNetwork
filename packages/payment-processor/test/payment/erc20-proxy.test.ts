@@ -10,7 +10,7 @@ import {
 import Utils from '@requestnetwork/utils';
 import { approveErc20, getErc20Balance } from '../../src/payment/erc20';
 import { _getErc20ProxyPaymentUrl, payErc20ProxyRequest } from '../../src/payment/erc20-proxy';
-import { getRequestPaymentValues } from '../../src/payment/utils';
+import { getRequestPaymentValues } from '../../src/utils';
 
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/await-thenable */

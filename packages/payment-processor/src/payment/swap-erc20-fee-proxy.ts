@@ -1,6 +1,6 @@
 import { constants, ContractTransaction, Signer, BigNumber, BigNumberish, providers } from 'ethers';
 
-import { erc20FeeProxyArtifact, erc20SwapToPayArtifact } from '@requestnetwork/smart-contracts';
+import { erc20SwapToPayArtifact } from '@requestnetwork/smart-contracts';
 import { ERC20SwapToPay__factory } from '@requestnetwork/smart-contracts/types';
 import { ClientTypes } from '@requestnetwork/types';
 
@@ -11,19 +11,25 @@ import {
   getRequestPaymentValues,
   getSigner,
   validateErc20FeeProxyRequest,
-} from './utils';
+} from '../utils';
 
 /**
- * Details required for a token swap:
- *
- *  - maxInputAmount: maximum number of ERC20 allowed for the swap before payment, considering both amount and fees
- *  - path: array of token addresses to be used for the "swap path".
- *    ['0xPaymentCurrency', '0xIntermediate1', ..., '0xRequestCurrency']
- *  - deadline: time in milliseconds since UNIX epoch, after which the swap should not be executed.
+ * Details required for a token swap
  */
 export interface ISwapSettings {
+  /**
+   * time in milliseconds since UNIX epoch, after which the swap should not be executed.
+   */
   deadline: number;
+  /**
+   * maximum number of ERC20 allowed for the swap before payment, considering both amount and fees
+   */
   maxInputAmount: BigNumberish;
+  /**
+   * array of token addresses to be used for the "swap path".
+   *
+   * @example ['0xPaymentCurrency', '0xIntermediate1', ..., '0xRequestCurrency']
+   */
   path: string[];
 }
 
@@ -112,7 +118,7 @@ export function encodeSwapToPayErc20FeeRequest(
     throw new Error('Request currency network is missing');
   }
 
-  const swapToPayAddress = erc20FeeProxyArtifact.getAddress(request.currencyInfo.network);
+  const swapToPayAddress = erc20SwapToPayArtifact.getAddress(request.currencyInfo.network);
   const swapToPayContract = ERC20SwapToPay__factory.connect(swapToPayAddress, signer);
 
   return swapToPayContract.interface.encodeFunctionData('swapTransferWithReference', [

@@ -10,7 +10,7 @@ import {
 import Utils from '@requestnetwork/utils';
 
 import { _getEthPaymentUrl, payEthInputDataRequest } from '../../src/payment/eth-input-data';
-import { getRequestPaymentValues } from '../../src/payment/utils';
+import { getRequestPaymentValues } from '../../src/utils';
 
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/await-thenable */

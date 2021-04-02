@@ -12,7 +12,7 @@ import {
   getRequestPaymentValues,
   getSigner,
   validateConversionFeeProxyRequest,
-} from './utils';
+} from '../utils';
 
 /**
  * Details required to pay a request with on-chain conversion:
