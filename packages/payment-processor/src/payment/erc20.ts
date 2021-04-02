@@ -14,46 +14,6 @@ import {
 import { ITransactionOverrides } from './transaction-overrides';
 
 /**
- * Checks if the proxy has the necessary allowance from a given account to pay a given request with ERC20
- * @param request request to pay
- * @param account account that will be used to pay the request
- * @param provider the web3 provider. Defaults to Etherscan.
- */
-export async function hasErc20Approval(
-  request: ClientTypes.IRequestData,
-  account: string,
-  signerOrProvider: providers.Provider | Signer = getNetworkProvider(request),
-): Promise<boolean> {
-  return checkErc20Allowance(
-    account,
-    getProxyAddress(request),
-    signerOrProvider,
-    request.currencyInfo.value,
-    request.expectedAmount,
-  );
-}
-
-/**
- * Checks if a spender has enough allowance from an ERC20 token owner to pay an amount.
- * @param ownerAddress address of the owner
- * @param spenderAddress address of the spender
- * @param provider the web3 provider. Defaults to Etherscan.
- * @param paymentCurrency ERC20 currency
- * @param amount
- */
-export async function checkErc20Allowance(
-  ownerAddress: string,
-  spenderAddress: string,
-  signerOrProvider: providers.Provider | Signer,
-  tokenAddress: string,
-  amount: BigNumberish,
-): Promise<boolean> {
-  const erc20Contract = ERC20__factory.connect(tokenAddress, signerOrProvider);
-  const allowance = await erc20Contract.allowance(ownerAddress, spenderAddress);
-  return allowance.gte(amount);
-}
-
-/**
  * Processes the approval transaction of the targeted ERC20.
  * @param request request to pay
  * @param provider the web3 provider. Defaults to Etherscan.
@@ -165,23 +125,4 @@ export async function getAnyErc20Balance(
 ): Promise<BigNumberish> {
   const erc20Contract = ERC20__factory.connect(anyErc20Address, provider);
   return erc20Contract.balanceOf(address);
-}
-
-/**
- * Get the request payment network proxy address
- * @param request
- * @returns the payment network proxy address
- */
-function getProxyAddress(request: ClientTypes.IRequestData): string {
-  const id = getPaymentNetworkExtension(request)?.id;
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT) {
-    return erc20ProxyArtifact.getAddress(request.currencyInfo.network!);
-  }
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT) {
-    return erc20FeeProxyArtifact.getAddress(request.currencyInfo.network!);
-  }
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_ADDRESS_BASED) {
-    throw new Error(`ERC20 address based payment network doesn't need approval`);
-  }
-  throw new Error(`Unsupported payment network: ${id}`);
 }

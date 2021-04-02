@@ -280,6 +280,17 @@ export function getAmountToPay(
   return amountToPay;
 }
 
+export function getConnectedAddress(provider: providers.Provider): Promise<string> {
+  const web3Provider = provider as providers.Web3Provider;
+  if ('getSigner' in web3Provider) {
+    return web3Provider.getSigner().getAddress();
+  } else {
+    throw new Error(
+      'Cannot get wallet address. Either provide a Web3Provider or specify the wallet address',
+    );
+  }
+}
+
 /**
  * Checks whether the given wallet (or, by default, the connected wallet) is a Multisig
  */
@@ -291,14 +302,7 @@ export async function isMultisig(
     provider = getProvider();
   }
   if (!walletAddress) {
-    const web3Provider = provider as providers.Web3Provider;
-    if ('getSigner' in web3Provider) {
-      walletAddress = await web3Provider.getSigner().getAddress();
-    } else {
-      throw new Error(
-        'Cannot get wallet address. Either provide a Web3Provider or specify the wallet address',
-      );
-    }
+    walletAddress = await getConnectedAddress(provider);
   }
   const senderAddressCode = await provider.getCode(walletAddress);
   // will return 0x if there is no code

@@ -27,8 +27,33 @@ export abstract class PaymentProcessorBase<
     validateRequest(this.request, this.paymentNetwork);
   }
 
+  /**
+   * Transaction Data
+   */
   abstract get data(): string;
+
+  /**
+   * Transaction To
+   */
   abstract get to(): string;
+
+  /**
+   * Transaction Value
+   */
+  get value(): BigNumberish {
+    return BigNumber.from(0);
+  }
+
+  /**
+   * Transaction parameters to pass to the web3 provider
+   */
+  get transactionParameters(): Pick<providers.TransactionRequest, 'data' | 'to' | 'value'> {
+    return {
+      to: this.to,
+      data: this.data,
+      value: this.value,
+    };
+  }
 
   get paymentNetwork(): PaymentTypes.PAYMENT_NETWORK_ID {
     const pn = getPaymentNetwork(this.request);
@@ -41,32 +66,15 @@ export abstract class PaymentProcessorBase<
     return (pn as unknown) as PaymentTypes.PAYMENT_NETWORK_ID;
   }
 
-  get supportsApproval(): boolean {
-    return false;
-  }
-
-  get requiresApproval(): Promise<boolean> {
-    throw new Error('Not implemented');
-  }
-
-  get value(): BigNumberish {
-    return BigNumber.from(0);
-  }
-
+  /**
+   * The amount to pay, based on the options and the request amount
+   */
   get amountToPay(): BigNumber {
     return getAmountToPay(this.request, this.options?.amount);
   }
 
   get paymentValues(): IPaymentValues {
     return getRequestPaymentValues(this.request);
-  }
-
-  get transactionParameters(): Pick<providers.TransactionRequest, 'data' | 'to' | 'value'> {
-    return {
-      to: this.to,
-      data: this.data,
-      value: this.value,
-    };
   }
 }
 
@@ -85,6 +93,9 @@ export abstract class FeePaymentProcessorBase<
     super(request, options, signerOrProvider);
   }
 
+  /**
+   * The fees to pay, based on the options and the request fee amount
+   */
   get feeToPay(): BigNumber {
     return BigNumber.from(this.options?.feeAmount || this.paymentValues.feeAmount || 0);
   }

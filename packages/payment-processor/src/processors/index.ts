@@ -16,7 +16,13 @@ import { Erc20ProxyContractPaymentProcessor } from './Erc20ProxyContractPaymentP
 import { Erc20FeeProxyContractPaymentProcessor } from './Erc20FeeProxyContractPaymentProcessor';
 
 export type PaymentSettings = {
+  /**
+   * The amount to pay, for partial payments. Defaults to the requests' expectedAmount
+   */
   amount?: BigNumberish;
+  /**
+   * A custom fee amount. Defaults to the requests' payment information
+   */
   feeAmount?: BigNumberish;
 
   /**

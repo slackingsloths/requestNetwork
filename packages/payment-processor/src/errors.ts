@@ -20,6 +20,7 @@ export const supportedNetworks = [
   ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT,
   ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT,
   ExtensionTypes.ID.PAYMENT_NETWORK_ETH_INPUT_DATA,
+  ExtensionTypes.ID.PAYMENT_NETWORK_ANY_DECLARATIVE,
 ];
 
 export function verifySupportedNetwork(request: ClientTypes.IRequestData): ExtensionTypes.ID {
