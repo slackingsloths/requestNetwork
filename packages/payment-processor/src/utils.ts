@@ -304,3 +304,15 @@ export async function isMultisig(
   // will return 0x if there is no code
   return senderAddressCode?.length > 2;
 }
+
+/**
+ * Checks if the currently connected wallet is a Gnosis multisig, connected via WalletConnect.
+ */
+export function isGnosis(provider?: providers.Provider): boolean {
+  if (!provider) {
+    provider = getProvider();
+  }
+  return ['Safe Multisig WalletConnect', 'Gnosis Safe Multisig'].includes(
+    (provider as any)?.provider?.wc?._peerMeta?.name,
+  );
+}

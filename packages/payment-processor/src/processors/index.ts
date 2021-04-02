@@ -1,16 +1,19 @@
-import { ClientTypes, ExtensionTypes, RequestLogicTypes } from '@requestnetwork/types';
 import { BigNumberish, providers, Signer } from 'ethers';
-import { UnsupportedNetworkError } from '../payment';
+
+import { ClientTypes, ExtensionTypes, RequestLogicTypes } from '@requestnetwork/types';
+
+import { canSwapToPay } from '../swap';
 import { getPaymentNetwork } from '../utils';
+import { UnsupportedNetworkError } from '../errors';
+
 import { PaymentProcessorBase } from './PaymentProcessorBase';
+import { ISwapSettings } from '../payment/swap-erc20-fee-proxy';
+import { EthProxyPaymentProcessor } from './EthProxyPaymentProcessor';
+import { AnyToErc20PaymentProcessor } from './AnyToErc20PaymentProcessor';
+import { EthInputDataPaymentProcessor } from './EthInputDataPaymentProcessor';
+import { SwapErc20FeeProxyPaymentProcessor } from './SwapErc20FeeProxyPaymentProcessor';
 import { Erc20ProxyContractPaymentProcessor } from './Erc20ProxyContractPaymentProcessor';
 import { Erc20FeeProxyContractPaymentProcessor } from './Erc20FeeProxyContractPaymentProcessor';
-import { EthInputDataPaymentProcessor } from './EthInputDataPaymentProcessor';
-import { EthProxyPaymentProcessor } from './EthProxyPaymentProcessor';
-import { SwapErc20FeeProxyPaymentProcessor } from './SwapErc20FeeProxyPaymentProcessor';
-import { ISwapSettings } from '../payment/swap-erc20-fee-proxy';
-import { canSwapToPay } from '../swap';
-import { AnyToErc20PaymentProcessor } from './AnyToErc20PaymentProcessor';
 
 export type PaymentSettings = {
   amount?: BigNumberish;

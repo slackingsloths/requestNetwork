@@ -4,57 +4,14 @@ import { erc20ProxyArtifact } from '@requestnetwork/smart-contracts';
 import { erc20FeeProxyArtifact } from '@requestnetwork/smart-contracts';
 import { ERC20__factory } from '@requestnetwork/smart-contracts/types';
 import { ClientTypes, ExtensionTypes, PaymentTypes } from '@requestnetwork/types';
-
-import { _getErc20FeeProxyPaymentUrl, payErc20FeeProxyRequest } from './erc20-fee-proxy';
-import { ISwapSettings, swapErc20FeeProxyRequest } from './swap-erc20-fee-proxy';
-import { _getErc20ProxyPaymentUrl, payErc20ProxyRequest } from './erc20-proxy';
-
-import { ITransactionOverrides } from './transaction-overrides';
 import {
   getNetworkProvider,
   getPaymentNetworkExtension,
   getProvider,
   getSigner,
   validateRequest,
-} from './utils';
-
-/**
- * Processes a transaction to pay an ERC20 Request.
- * @param request
- * @param signerOrProvider the Web3 provider, or signer. Defaults to window.ethereum.
- * @param amount optionally, the amount to pay. Defaults to remaining amount of the request.
- * @param feeAmount optionally, the fee amount to pay. Only applicable to ERC20 Fee Payment network. Defaults to the fee amount.
- * @param overrides optionally, override default transaction values, like gas.
- * @param swapSettings optionally, the settings to swap a maximum amount of currency, through a swap path, before a deadline, to pay
- */
-export async function payErc20Request(
-  request: ClientTypes.IRequestData,
-  signerOrProvider?: providers.Web3Provider | Signer,
-  amount?: BigNumberish,
-  feeAmount?: BigNumberish,
-  overrides?: ITransactionOverrides,
-  swapSettings?: ISwapSettings,
-): Promise<ContractTransaction> {
-  const id = getPaymentNetworkExtension(request)?.id;
-  if (swapSettings && id !== ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT) {
-    throw new Error(`ExtensionType: ${id} is not supported by swapToPay contract`);
-  }
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT) {
-    return payErc20ProxyRequest(request, signerOrProvider, amount, overrides);
-  }
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT) {
-    if (swapSettings) {
-      return swapErc20FeeProxyRequest(request, signerOrProvider, swapSettings, {
-        amount,
-        feeAmount,
-        overrides,
-      });
-    } else {
-      return payErc20FeeProxyRequest(request, signerOrProvider, amount, feeAmount, overrides);
-    }
-  }
-  throw new Error('Not a supported ERC20 proxy payment network request');
-}
+} from '../utils';
+import { ITransactionOverrides } from './transaction-overrides';
 
 /**
  * Checks if the proxy has the necessary allowance from a given account to pay a given request with ERC20
@@ -208,27 +165,6 @@ export async function getAnyErc20Balance(
 ): Promise<BigNumberish> {
   const erc20Contract = ERC20__factory.connect(anyErc20Address, provider);
   return erc20Contract.balanceOf(address);
-}
-
-/**
- * Return the EIP-681 format URL with the transaction to pay an ERC20
- * Warning: this EIP isn't widely used, be sure to test compatibility yourself.
- *
- * @param request
- * @param amount optionally, the amount to pay. Defaults to remaining amount of the request.
- */
-export function _getErc20PaymentUrl(
-  request: ClientTypes.IRequestData,
-  amount?: BigNumberish,
-): string {
-  const id = getPaymentNetworkExtension(request)?.id;
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_PROXY_CONTRACT) {
-    return _getErc20ProxyPaymentUrl(request, amount);
-  }
-  if (id === ExtensionTypes.ID.PAYMENT_NETWORK_ERC20_FEE_PROXY_CONTRACT) {
-    return _getErc20FeeProxyPaymentUrl(request, amount);
-  }
-  throw new Error('Not a supported ERC20 proxy payment network request');
 }
 
 /**
