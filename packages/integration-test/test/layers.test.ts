@@ -57,7 +57,9 @@ describe('Request system', () => {
   beforeEach(async () => {
     // Storage setup
     provider = new providers.JsonRpcProvider('http://localhost:8545');
-    wallet = Wallet.createRandom().connect(provider);
+    wallet = Wallet.fromMnemonic(
+      'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat',
+    ).connect(provider);
     const ipfsGatewayConnection: StorageTypes.IIpfsGatewayConnection = {
       host: 'localhost',
       port: 5001,
