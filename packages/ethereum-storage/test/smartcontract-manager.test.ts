@@ -5,7 +5,7 @@ import { ethers, providers } from 'ethers';
 import SmartContractManager from '../src/smart-contract-manager';
 import * as web3Utils from 'web3-utils';
 import { RequestHashStorage__factory } from '@requestnetwork/smart-contracts/types';
-const { time } = require('@openzeppelin/test-helpers');
+// const { time } = require('@openzeppelin/test-helpers');
 
 /* eslint-disable no-magic-numbers */
 
@@ -186,6 +186,7 @@ describe('SmartContractManager', () => {
   });
 
   afterEach(() => {
+    jest.resetAllMocks();
     jest.restoreAllMocks();
   });
 
@@ -230,45 +231,22 @@ describe('SmartContractManager', () => {
   });
 
   // TODO since the migration to jest, this test fails.
-  it.skip('allows to add other content than hash to contractHashStorage', async () => {
+  it('allows to add other content than hash to contractHashStorage', async () => {
     await smartContractManager.addHashAndSizeToEthereum(otherContent, { contentSize: otherSize });
+    const lastBlock = await provider.getBlockNumber();
     // Reading last event log
-    const events = await contractHashStorage.getPastEvents({
-      event: 'NewHash',
-      toBlock: 'latest',
-    });
+    const events = await contractHashStorage.queryFilter(
+      contractHashStorage.filters.NewHash(null, null, null),
+      lastBlock,
+      'latest',
+    );
 
     // Only one event is parsed
     expect(events.length).toEqual(1);
 
     expect(events[0].args.hash).toEqual(otherContent);
-    expect(events[0].args.hashSubmitter).toEqual(addressRequestHashSubmitter);
+    expect(events[0].args.hashSubmitter.toLowerCase()).toEqual(addressRequestHashSubmitter);
     expect(events[0].args.feesParameters).toEqual(otherSizeBytes32Hex);
-  });
-
-  // We wrap this test in its own describe to allow a cleanup in case of failure.
-  // otherwise, the interval never stops
-  describe('Fast Block mining tests', () => {
-    let blockInterval: NodeJS.Timeout;
-    beforeEach(() => {
-      // This mock is used to ensure any block is never fetchable
-      jest
-        .spyOn(smartContractManager.provider, 'getBlock')
-        .mockImplementation(() => Promise.reject(null as any));
-
-      // fake the creation of new blocks on ethereum
-      blockInterval = setInterval(async () => {
-        await time.advanceBlock();
-      }, 50);
-    });
-    afterEach(() => {
-      clearInterval(blockInterval);
-    });
-    it('cannot add hash to ethereum if block of the transaction is not fetchable within 23 confirmation', async () => {
-      await expect(
-        smartContractManager.addHashAndSizeToEthereum(hashStr, { contentSize: otherSize }),
-      ).rejects.toThrowError('Maximum number of confirmation reached');
-    }, 30000);
   });
 
   it('allows to get all hashes', async () => {
@@ -417,7 +395,7 @@ describe('SmartContractManager', () => {
     expect(SmartContracts.requestHashSubmitterArtifact.getCreationBlockNumber('private')).toBe(1);
   });
 
-  xit('allows to getMetaFromEthereum() a hash', async () => {
+  it('allows to getMetaFromEthereum() a hash', async () => {
     // Inside getBlockNumberFromNumberOrString, this function will be only called with parameter 'latest'
     // For getPastEventsMock the number of the latest block is 3
     jest
