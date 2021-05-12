@@ -1,0 +1,6 @@
+{
+  "plugins": {
+    "release-it-yarn-workspaces": true
+  },
+  "npm": false
+}
